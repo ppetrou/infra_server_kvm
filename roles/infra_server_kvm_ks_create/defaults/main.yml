@@ -1,0 +1,22 @@
+---
+# defaults file for infra_server_kvm_ks_create
+
+vm_name: rhel7-dev-01
+vm_osinfo_id: http://redhat.com/rhel/7.6
+vm_iso_image: rhel-server-7.6-x86_64-dvd.iso
+vm_mem: 4096
+vm_mem_current: 4096
+vm_cpu: 4
+vm_disks:
+  - { device: "vda", format: "qcow2", size: 20480, bootable: true, swap: false }
+  - { device: "vdb", format: "qcow2", size: 4096,  bootable: false, swap: true }
+vm_mac_prefix: "bc:ae:80"
+vm_interfaces:
+  - { ifname: "eth0", bridge: "bridge0", mac: "96:01:b7:9d:03:8a", bootproto: dhcp, ip_addr: None, gateway: None, dns_servers: None }
+  - { ifname: "eth1", bridge: "bridge0", mac: "7e:9c:81:27:12:b6", bootproto: dhcp, ip_addr: None, gateway: None, dns_servers: None }
+vm_partitions:
+  - { mount: "/home", fstype: "xfs",  size: 5120,  name: "home", vgname: "vg_vda" }
+  - { mount: "/var",  fstype: "xfs",  size: 2048,  name: "var",  vgname: "vg_vda" }
+  - { mount: "/",     fstype: "xfs",  size: 10240, name: "root", vgname: "vg_vda" }
+  - { mount: "swap",  fstype: "swap", size: -1,  name: "swap", vgname: "vg_vdb" }
+vm_os_packages: [ net-tools ]

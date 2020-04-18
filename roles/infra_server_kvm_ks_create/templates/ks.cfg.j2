@@ -1,0 +1,88 @@
+#version=DEVEL
+# System authorization information
+auth --enableshadow --passalgo=sha512
+repo --name="Server-HighAvailability" --baseurl=file:///run/install/repo/addons/HighAvailability
+repo --name="Server-ResilientStorage" --baseurl=file:///run/install/repo/addons/ResilientStorage
+
+# Use CDROM installation media
+cdrom
+
+# Use graphical install
+text
+
+# Run the Setup Agent on first boot
+firstboot --enable
+ignoredisk --only-use={% for disk in vm_disks %}{{disk.device}}{% if not loop.last %},{% endif %}{% endfor %}
+
+# Keyboard layouts
+keyboard --vckeymap=gb --xlayouts='gb'
+# System language
+lang en_GB.UTF-8
+
+# Automation User
+user --name={{ automation_user.username }} --password={{ automation_user.password }}
+sshkey --username={{ automation_user.username }} "{{ automation_user_pubkey }}"
+
+# Network information
+{% for net in vm_interfaces %}
+network --bootproto={{ net.bootproto }} --device={{ net.ifname }} {% if net.bootproto == 'static' %} --ip={{ net.ip_addr }} --netmask={{ net.netmask }} --gateway={{ net.gateway }} --nameserver={{ net.dns_servers }} {% endif %} --onboot=on --noipv6 --activate
+{% endfor %}
+network --hostname={{ vm_name }}.local
+
+# Root password
+rootpw --iscrypted $6$u1eegr5xlQVrNx2/$VGG7uvf22KNERoAzlb134QY9XTdij5FwbLdi8aCi54UzKKTqS0wYoCw.1LrHZtdaSZSF5WhEAyViIyELxHsYs1
+
+# System services
+services --enabled="chronyd"
+
+# System timezone
+timezone Europe/London --isUtc
+
+# System bootloader configuration
+bootloader --append=" crashkernel=auto" --location=mbr --boot-drive=vda
+
+# Partition clearing information
+clearpart --all --initlabel
+
+# Disk partitioning information
+{% for disk in vm_disks %}
+part pv.{{ disk.device }} --fstype="lvmpv" --ondisk={{ disk.device }} --size 1 --grow
+{% endfor %}
+part /boot --fstype="xfs" --size=1024
+{% for disk in vm_disks %}
+volgroup vg_{{ disk.device }} --pesize=4096 pv.{{ disk.device }}
+{% endfor %}
+{% for part in vm_partitions %}
+{% if part.fstype == "swap" %}
+logvol {{ part.mount }} --fstype={{ part.fstype }} --size=1 --grow --name={{ part.name }} --vgname={{ part.vgname }}
+{% else %}
+logvol {{ part.mount }} --fstype={{ part.fstype }} --size={{ part.size }} --name={{ part.name }} --vgname={{ part.vgname }}
+{% endif %}
+{% endfor %}
+
+%packages
+@^minimal
+@core
+chrony
+kexec-tools
+{% for package in vm_os_packages %}
+{{ package }}
+{% endfor %}
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+
+%anaconda
+pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+%end
+
+%post --log=/root/ks-post.log
+echo "ansible ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/ansible
+%end
+
+# Shutdown
+shutdown

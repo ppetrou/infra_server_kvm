@@ -1,0 +1,16 @@
+---
+  network_provider: nm
+  network_connections:
+    - name: "{{ bridge_name }}"
+      state: up
+      persistent_state: present
+      type: bridge
+      autoconnect: true
+    - name: Wired_connection_bridge
+      state: up
+      persistent_state: present
+      interface_name: "{{ slave_interface }}"
+      type: ethernet
+      autoconnect: true
+      master: "{{ bridge_name }}"
+      slave_type: bridge

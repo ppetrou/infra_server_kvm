@@ -1,0 +1,46 @@
+#!/usr/bin/guestfish -f
+
+{% for disk in vm_disks %}
+add {{ vm_dir }}/{{ disk.file }}
+{% endfor %}
+run
+
+{# Mount default Image partition #}
+mount /dev/sda1 /
+
+{% for vm_mountpoint in vm_mountpoints %}
+
+{% if vm_mountpoint.type == 'standard' %}
+{% set device_name = cloud_image_default_device_prefix + vm_mountpoint.device[-2:] %}
+{% else %}
+{% set device_name = vm_mountpoint.device %}
+{% endif %}
+{% if vm_mountpoint.fstype == 'swap' %}
+mkswap {{ device_name }}
+swapon-device {{ device_name }}
+write-append /etc/fstab "{{ vm_mountpoint.device }} swap swap defaults 0 0\n"
+{% else %}
+
+
+{% if (ansible_facts['distribution'] not in vm_osinfo_id) and (ansible_facts['distribution_version'] not in vm_osinfo_id) and (vm_mountpoint.fstype == 'xfs') %}
+sh "mkfs.xfs {{ device_name }}"
+{% else %}
+mkfs {{ vm_mountpoint.fstype }} {{ device_name }}
+{% endif %}
+mkdir {{ vm_mountpoint.mountpoint }}
+write-append /etc/fstab "{{ vm_mountpoint.device }} {{ vm_mountpoint.mountpoint }} {{ vm_mountpoint.fstype }} defaults 1 2\n"
+{% endif %}
+
+{% endfor %}
+
+
+{% if (ansible_facts['distribution'] not in vm_osinfo_id) and (ansible_facts['distribution_version'] not in vm_osinfo_id) and (vm_mountpoint.fstype == 'xfs') %}
+
+
+sh "mkfs.xfs {{ device_name }}"
+mkfs {{ vm_mountpoint.fstype }} {{ device_name }}
+mkswap {{ device_name }}
+swapon-device {{ device_name }}
+
+write-append /etc/fstab "{{ vm_mountpoint.device }} swap swap defaults 0 0\n"
+write-append /etc/fstab "{{ vm_mountpoint.device }} {{ vm_mountpoint.mountpoint }} {{ vm_mountpoint.fstype }} defaults 1 2\n"

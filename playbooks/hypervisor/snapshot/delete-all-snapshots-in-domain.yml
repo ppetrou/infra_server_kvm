@@ -1,0 +1,34 @@
+---
+- hosts: hypervisor
+  vars_files:
+    - ../../../vars/snapshot_vars.yml
+
+  vars_prompt:
+    - name: domain_name
+      prompt: "Domain Name"
+      private: no
+
+  tasks:
+
+    # Make sure KVM is shutdown
+    - name: Make sure KVM is shutdown
+      virt:
+        name: "{{ domain_name }}"
+        command: status
+      register: reg_vm_status
+
+    - name: Fail if KVM is not shutdown
+      fail:
+        msg: "{{ domain_name }} is not shutdown. Current State: {{ reg_vm_status.status }}"
+      when:
+        - reg_vm_status.status != "shutdown"
+
+    - name: List domain snapshots
+      command: virsh -c {{ qemu_conn }} snapshot-list --domain {{ domain_name }} --name
+      register: reg_list_domain_snapshosts
+
+    # Delete snapshot
+    - name: Delete snapshot
+      command: virsh -c {{ qemu_conn }} snapshot-delete --domain {{ domain_name }} --snapshotname {{ item }}
+      with_items:
+        - "{{ reg_list_domain_snapshosts.stdout_lines }}"

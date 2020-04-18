@@ -1,0 +1,12 @@
+---
+- hosts: hypervisor
+  become: true
+  vars_files:
+    - ../../../vars/hypervisor_vars.yml
+  tasks:
+
+    # Setup libvirts authorization using polkit
+    - name: Setup libvirts authorization using polkit
+      template:
+        src: ../../../templates/libvirt-manage.rules.j2
+        dest: /etc/polkit-1/rules.d/80-libvirt-manage.rules

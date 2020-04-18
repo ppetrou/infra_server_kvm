@@ -1,0 +1,46 @@
+---
+- hosts: hypervisor
+  tasks:
+
+    # Include infra_server_kvm_noos_create
+    - include_role:
+        name : infra_server_kvm_noos_create
+      vars:
+        vm_name: "{{ item.vm_name }}"
+        vm_osinfo_id: "{{ item.vm_osinfo_id }}"
+        vm_mem: "{{ item.vm_mem }}"
+        vm_mem_current: "{{ item.vm_mem_current }}"
+        vm_cpu: "{{ item.vm_cpu }}"
+        vm_disks: "{{ item.vm_disks }}"
+        vm_mac_prefix: "{{ item.vm_mac_prefix }}"
+        vm_interfaces: "{{ item.vm_interfaces }}"
+      with_items:
+        - { vm_name: rhel7-dev-01,
+            vm_osinfo_id: http://redhat.com/rhel/7.7,
+            vm_mem: 4096,
+            vm_mem_current: 4096,
+            vm_cpu: 4,
+            vm_disks: [
+              { device: "vda", format: "qcow2", size: 10G, bootable: true },
+              { device: "vdb", format: "qcow2", size: 2G, bootable: false }
+            ],
+            vm_mac_prefix: "bc:ae:80",
+            vm_interfaces: [
+              { bridge: "br0", mac: "bc:ae:80:9b:b9:e9" }
+            ]
+          }
+        - { vm_name: rhel7-dev-02,
+            vm_osinfo_id: http://redhat.com/rhel/7.7,
+            vm_mem: 4096,
+            vm_mem_current: 4096,
+            vm_cpu: 4,
+            vm_disks: [
+              { device: "vda", format: "qcow2", size: 10G, bootable: true },
+              { device: "vdb", format: "qcow2", size: 2G, bootable: false }
+            ],
+            vm_mac_prefix: "bc:ae:80",
+            vm_interfaces: [
+              { bridge: "br0", mac: "bc:ae:80:9b:b9:e8" },
+              { bridge: "br0", mac: "" }
+            ]
+          }

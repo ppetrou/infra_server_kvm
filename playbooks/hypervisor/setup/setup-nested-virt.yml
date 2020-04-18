@@ -1,0 +1,29 @@
+---
+- hosts: hypervisor
+  become: true
+  vars_files:
+    - ../../../vars/hypervisor_vars.yml
+  tasks:
+    # Check that nested virtualization is supported
+    - name: Fail if nested virtualization is not supported
+      vars:
+        nested: lookup('file', '/sys/module/{{ kvm_module }}/parameters/nested')
+      fail:
+        msg: "Nested Virtualization is not supported."
+      when: nested in ['N',0]
+
+    # Activate the nesting feature in kernel
+    - name: Activate the nesting feature in kernel
+      modprobe:
+        name: "{{ kvm_module }}"
+        params: 'nested=1'
+        state: present
+
+    # Activate the nesting feature in kernel for after reboot.
+    - name: Activate the nesting feature in kernel for after reboot.
+      lineinfile:
+        line: options {{ kvm_module }} nested=1
+        path: /etc/modprobe.d/kvm.conf
+        regexp: '\b{{ kvm_module }}\b'
+        firstmatch: yes
+        state: present

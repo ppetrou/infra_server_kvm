@@ -1,0 +1,58 @@
+---
+# tasks file for infra_server_kvm_fcos_create
+
+# Create VM Directory
+- name: Create VM Directory
+  file:
+    path: "{{ vm_dir }}"
+    state: directory
+    mode: 0755
+
+# Create keys Directory
+- name: Create keys Directory
+  file:
+    path: "{{ vm_keys_dir }}"
+    state: directory
+    mode: 0755
+
+# Get CoreOS Cloud Image
+- name: Get CoreOS Cloud Image
+  copy:
+    src: "{{ vm_coreos_cloud_image_path }}"
+    dest: "{{ vm_disk_file }}"
+    force: no
+    remote_src: yes
+
+# Expand Cloud Image in size
+- name: Check if images exist
+  stat:
+    path: "{{ vm_dir }}/{{ vm_disk_check.file }}"
+  register: reg_stat_images
+  loop: "{{ vm_disks }}"
+  loop_control:
+    loop_var: vm_disk_check
+
+- name: Create Secondary Disks
+  command: qemu-img create -f {{ vm_disk_create.format }} {{ vm_dir }}/{{ vm_disk_create.device }}.{{ vm_disk_create.format }} -o preallocation=metadata,compat=1.1 {{ vm_disk_create.size }}G
+  when: "reg_stat_images.results[ansible_loop.index0].stat.exists == false"
+  loop: "{{ vm_disks }}"
+  loop_control:
+    extended: yes
+    loop_var: vm_disk_create
+
+- name: Create Ignition file
+  template:
+    src: config.ign.j2
+    dest: "{{ vm_dir }}/config.ign"
+    setype: virt_content_t
+
+# Create the virt-install command
+- name: Create the virt-install command
+  template:
+    src: virt-install.sh.j2
+    dest: "{{ vm_virt_install_sh_filepath }}"
+    mode: 0766
+
+# Create the VM
+- name: Create the VM
+  shell: "{{ vm_virt_install_sh_filepath }}"

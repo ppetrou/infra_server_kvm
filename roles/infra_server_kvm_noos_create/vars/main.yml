@@ -1,0 +1,6 @@
+---
+# vars file for infra_server_kvm_noos_create
+
+# VM Directories
+vm_root_dir: /home/ppetrou/VirtualMachines
+vm_dir: "{{ vm_root_dir }}/{{ vm_name }}"

@@ -1,0 +1,20 @@
+---
+- hosts: hypervisor
+  tasks:
+
+    # Include infra_server_kvm_cloud_create
+    - include_role:
+        name : infra_server_kvm_ansible_bootstrap
+      vars:
+        vm_ansible_user: "{{ item.vm_ansible_user }}"
+        vm_ansible_password: "{{ item.vm_ansible_password }}"
+        vm_name: "{{ item.vm_name }}"
+      with_items:
+        - { vm_ansible_user: ansible,
+            vm_ansible_password: ansible123,
+            vm_name: coredns
+          }
+        - { vm_ansible_user: ansible,
+            vm_ansible_password: ansible123,
+            vm_name: satellite-lab
+          }

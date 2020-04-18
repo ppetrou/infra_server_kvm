@@ -1,0 +1,4 @@
+* How to convert qcow2 to VMDK
+
+qemu-img convert -f qcow2 -O vmdk image.qcow2 image_new.vmdk
+vmkfstools -i image_new.vmdk -d thin image.vmdk

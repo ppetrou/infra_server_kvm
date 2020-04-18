@@ -1,0 +1,37 @@
+---
+- hosts: hypervisor
+  vars_files:
+    - ../../../vars/hypervisor_vars.yml
+
+  tasks:
+
+    # List all KVMS
+    - name: list all VMs
+      virt:
+        command: list_vms
+      register: reg_all_vms
+
+    # Destroy domain
+    - name: Destroy domain
+      command: virsh -c {{ qemu_conn }} destroy --domain {{ item }}
+      ignore_errors: true
+      with_items:
+        - "{{ reg_all_vms.list_vms }}"
+
+    # Delete domain
+    - name: Delete domain
+      command: virsh -c {{ qemu_conn }} undefine --domain {{ item }}
+      with_items:
+        - "{{ reg_all_vms.list_vms }}"
+
+    # Delete Pool Directory
+    - name: Delete Pool Directory
+      file:
+        path: "{{ vm_root_dir }}/{{ item }}"
+        state: absent
+      with_items:
+        - "{{ reg_all_vms.list_vms }}"
+
+    # Refresh Pool
+    - name: Refresh Pool
+      command: virsh -c {{ qemu_conn }} pool-refresh --pool {{ vm_pool_name }}

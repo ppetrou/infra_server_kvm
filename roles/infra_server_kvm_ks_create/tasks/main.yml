@@ -1,0 +1,54 @@
+---
+# tasks file for infra_server_kvm_ks_create
+
+# Create VM Directory
+- name: Create VM Directory
+  file:
+    path: "{{ vm_dir }}"
+    state: directory
+    mode: 0755
+
+# Create keys Directory
+- name: Create keys Directory
+  file:
+    path: "{{ vm_keys_dir }}"
+    state: directory
+    mode: 0755
+
+# Create automation user ssh-key pairs
+- name: Create automation user ssh-key pairs
+  openssh_keypair:
+    comment: "{{ automation_user.username }}"
+    path: "{{ automation_user_privkey_filepath }}"
+    force: no
+
+- name: Set vm_macs array to empty
+  set_fact:
+    vm_generated_mac_addresses: []
+
+- name: Generate MAC Addresses
+  set_fact:
+    vm_generated_mac_addresses: "{{ vm_generated_mac_addresses }} + [ '{{ vm_mac_prefix|random_mac }}' ]"
+  loop: "{{ vm_interfaces }}"
+  loop_control:
+    label: "{{ netifg_genmac.ifname }}"
+    loop_var: netifg_genmac
+
+# Create the virt-install command
+- name: Create the virt-install command
+  template:
+    src: virt-install.sh.j2
+    dest: "{{ vm_virt_install_sh_filepath }}"
+    mode: 0766
+
+# Create the kickstart file
+- name: Create the kickstart file
+  vars:
+    automation_user_pubkey: "{{ lookup('file', '{{ automation_user_pubkey_filepath }}') }}"
+  template:
+    src: ks.cfg.j2
+    dest: "{{ vm_ks_filepath }}"
+
+# Create the VM
+- name: Create the VM
+  shell: "{{ vm_virt_install_sh_filepath }}"

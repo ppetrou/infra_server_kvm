@@ -1,0 +1,59 @@
+---
+- hosts: hypervisor
+  tasks:
+
+    # Include  infra_server_kvm_ks_create
+    - include_role:
+        name : infra_server_kvm_ks_create
+      vars:
+        vm_name: "{{ item.vm_name }}"
+        vm_osinfo_id: "{{ item.vm_osinfo_id }}"
+        vm_iso_image: "{{ item.vm_iso_image }}"
+        vm_mem: "{{ item.vm_mem }}"
+        vm_mem_current: "{{ item.vm_mem_current }}"
+        vm_cpu: "{{ item.vm_cpu }}"
+        vm_disks: "{{ item.vm_disks }}"
+        vm_interfaces: "{{ item.vm_interfaces }}"
+        vm_partitions: "{{ item.vm_partitions }}"
+      with_items:
+        - { vm_name: rhel7-dev-01,
+            vm_osinfo_id: http://redhat.com/rhel/7.6,
+            vm_iso_image: rhel-server-7.6-x86_64-dvd.iso,
+            vm_mem: 4096,
+            vm_mem_current: 4096,
+            vm_cpu: 4,
+            vm_disks: [
+               { device: "vda", format: "qcow2", size: 20480, bootable: true },
+               { device: "vdb", format: "qcow2", size: 4096,  bootable: false }
+            ],
+            vm_interfaces: [
+               { ifname: "eth0", bridge: "br0", mac: "96:01:b7:9d:03:8a", bootproto: dhcp, ip_addr: None, gateway: None, dns_servers: None },
+               { ifname: "eth1", bridge: "br0", mac: "7e:9c:81:27:12:b6", bootproto: dhcp, ip_addr: None, gateway: None, dns_servers: None }
+            ],
+            vm_partitions: [
+               { mount: "/home", fstype: "xfs",  size: 5120,  name: "home", vgname: "vg_vda" },
+               { mount: "/var",  fstype: "xfs",  size: 2048,  name: "var",  vgname: "vg_vda" },
+               { mount: "/",     fstype: "xfs",  size: 10240, name: "root", vgname: "vg_vda" },
+               { mount: "swap",  fstype: "swap", size: -1,  name: "swap", vgname: "vg_vdb" },
+            ]
+          }
+        - { vm_name: rhel7-dev-02,
+            vm_osinfo_id: http://redhat.com/rhel/7.6,
+            vm_iso_image: rhel-server-7.6-x86_64-dvd.iso,
+            vm_mem: 4096,
+            vm_mem_current: 4096,
+            vm_cpu: 4,
+            vm_disks: [
+               { device: "vda", format: "qcow2", size: 20480, bootable: true },
+               { device: "vdb", format: "qcow2", size: 4096,  bootable: false }
+            ],
+            vm_interfaces: [
+               { ifname: "eth0", bridge: "br0", mac: "4c:d1:09:74:9a:4a", bootproto: dhcp, ip_addr: None, gateway: None, dns_servers: None },
+            ],
+            vm_partitions: [
+               { mount: "/home", fstype: "xfs",  size: 5120,  name: "home", vgname: "vg_vda" },
+               { mount: "/var",  fstype: "xfs",  size: 2048,  name: "var",  vgname: "vg_vda" },
+               { mount: "/",     fstype: "xfs",  size: 10240, name: "root", vgname: "vg_vda" },
+               { mount: "swap",  fstype: "swap", size: -1,  name: "swap", vgname: "vg_vdb" },
+            ]
+          }

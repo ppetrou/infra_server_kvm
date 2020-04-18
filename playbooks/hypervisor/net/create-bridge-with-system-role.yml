@@ -1,0 +1,20 @@
+---
+- hosts: hypervisor
+  become: true
+  vars_files:
+    - ../../../vars/net_vars.yml
+
+  vars_prompt:
+    - name: bridge_name
+      prompt: "Bridge Name"
+      private: no
+    - name: slave_interface
+      prompt: "Slave Interface"
+      private: no
+
+  tasks:
+
+    # Setup Bridge
+    - name: Setup Bridge
+      import_role:
+        name: linux-system-roles.network

@@ -1,0 +1,25 @@
+---
+- hosts: hypervisor
+  vars:
+    target_dir: /tmp/disks
+    disk_format: qcow2
+    disk_filepath: "{{ target_dir }}/{{ disk_device }}.{{ disk_format }}"
+
+  vars_prompt:
+    - name: disk_device
+      prompt: "Disk Device (e.g. vda)"
+      private: no
+    - name: disk_size
+      prompt: "Disk Size in Megabytes (e.g. 4096 for 4GB)"
+      private: no
+
+  tasks:
+
+    - name: Create Disk Directory
+      file:
+        path: "{{ target_dir }}"
+        state: directory
+        mode: 0755
+
+    - name: Create Disk
+      command: qemu-img create -f {{ disk_format }} {{ disk_filepath }} -o preallocation=metadata,compat=1.1 {{ disk_size }}M

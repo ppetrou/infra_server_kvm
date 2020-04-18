@@ -1,0 +1,19 @@
+---
+# vars file for infra_server_kvm_fcos_create
+
+# Cloud Image Location
+vm_coreos_cloud_image_location: /home/ppetrou/IMG/qcow2
+vm_coreos_cloud_image_path: "{{ vm_coreos_cloud_image_location }}/{{ vm_coreos_image }}"
+
+# VM Directories
+vm_root_dir: /home/ppetrou/VirtualMachines
+vm_dir: "{{ vm_root_dir }}/{{ vm_name }}"
+vm_disk_file: "{{ vm_dir }}/{{ vm_disks[0].file }}"
+vm_keys_dir: "{{ vm_root_dir }}/keys"
+
+# Ignition
+vm_ignition_file: config.ign
+vm_ignition_filepath: "{{ vm_dir }}/{{ vm_ignition_file }}"
+
+# Virt Install
+vm_virt_install_sh_filepath: "{{ vm_dir }}/virt-install.sh"

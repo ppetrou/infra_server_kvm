@@ -1,0 +1,33 @@
+---
+- hosts: hypervisor
+  become: true
+  tasks:
+
+    # Check if virtualization is enabled
+    - name: Read CPU Attributes
+      shell: lscpu | grep Virtualization
+      register: reg_check_virt
+
+    - name: Fail if CPU does not support Virtualization
+      fail:
+        msg: "CPU does not support Virtualization"
+      when:
+        - "'Virtualization' not in reg_check_virt.stdout"
+
+    # Install KVM-QEMU
+    - name: Install KVM-QEMU
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - qemu-kvm
+        - libvirt
+        - virt-install
+        - libguestfs-tools
+
+    # Enable and start libvirtd
+    - name: Enable libvirtd
+      systemd:
+        name: libvirtd
+        enabled: true
+        state: started

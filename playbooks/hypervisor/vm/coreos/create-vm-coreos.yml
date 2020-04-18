@@ -1,0 +1,34 @@
+---
+- hosts: hypervisor
+  tasks:
+
+    # Include infra_server_kvm_cloud_create
+    - include_role:
+        name : infra_server_kvm_fcos_create
+      vars:
+        vm_name: "{{ item.vm_name }}"
+        vm_osinfo_id: "{{ item.vm_osinfo_id }}"
+        vm_coreos_image: "{{ item.vm_coreos_image }}"
+        vm_mem: "{{ item.vm_mem }}"
+        vm_mem_current: "{{ item.vm_mem_current }}"
+        vm_cpu: "{{ item.vm_cpu }}"
+        vm_disks: "{{ item.vm_disks }}"
+        vm_mac_prefix: "{{ item.vm_mac_prefix }}"
+        vm_interfaces: "{{ item.vm_interfaces }}"
+      with_items:
+        - { vm_name: fcos-dev-01,
+            vm_osinfo_id: http://redhat.com/rhel/7.7,
+            vm_coreos_image: fedora-coreos-31.20200113.3.1-qemu.x86_64.qcow2,
+            vm_mem: 4096,
+            vm_mem_current: 4096,
+            vm_cpu: 4,
+            vm_disks: [
+              { device: "vda", file: "vda.qcow2", format: "qcow2", size: 10240, bootable: true },
+              { device: "vdb", file: "vdb.qcow2", format: "qcow2", size: 2048, bootable: false }
+            ],
+            vm_mac_prefix: "bc:ae:80",
+            vm_interfaces: [
+              { ifname: "eth0", bridge: "virbr0", mac: "bc:ae:80:9b:b8:e8", bootproto: static, ip_addr: 192.168.100.200, netmask: None, gateway: 192.168.100.1, dns_servers: [] },
+              { ifname: "eth1", bridge: "virbr0", mac: "bc:ae:80:9b:b8:e9", bootproto: static, ip_addr: 192.168.100.200, netmask: None, gateway: 192.168.100.1, dns_servers: [] }
+            ]
+          }

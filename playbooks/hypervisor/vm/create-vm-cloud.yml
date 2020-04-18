@@ -1,0 +1,39 @@
+---
+- hosts: hypervisor
+  roles:
+    - role: infra_server_kvm_cloud_create
+      vars:
+        vm_name: rhel7-dev-lab1
+        vm_hostname: rhel7-dev-lab1.lab.local
+        vm_osinfo_id: http://redhat.com/rhel/7.7
+        vm_cloud_image: rhel-server-7.7-update-1-x86_64-kvm.qcow2
+        vm_mem: 4096
+        vm_mem_current: 4096
+        vm_cpu: 4
+        vm_disks: [
+          { device: "vda", size: 40G, bootable: true },
+          { device: "vdb", size: 30G, bootable: false }
+        ]
+        vm_mac_prefix: "bc:ae:80"
+        vm_interfaces: [
+          { ifname: "eth0", bridge: "br0", mac: "bc:ae:80:9b:b9:e8", bootproto: static, ip_addr: 192.168.100.200, netmask: None, gateway: 192.168.100.1, dns_servers: [] }
+        ]
+        default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
+        vm_partitions: [
+          { device: "vda", part_num: 2, size: 2,  unit: GiB },
+          { device: "vda", part_num: 3, size: 5,  unit: GiB },
+          { device: "vdb", part_num: 1, size: 5,  unit: GiB },
+          { device: "vdb", part_num: 2, size: 10, unit: GiB }
+        ]
+        vm_volume_groups: [
+          { vg: vg_root, pvs: [ { device: "vda", parts: [2] }, { device: "vdb", parts: [1, 2] } ] }
+        ]
+        vm_logical_volumes: [
+          { lv: lv1, vg: vg_root, size: 2048, unit: MiB },
+          { lv: lv2, vg: vg_root, size: 4096, unit: MiB }
+        ]
+        vm_filesystems: [
+          { device: "vda3",        mountpoint: "swap", fstype: "swap", type: "standard" },
+          { device: "vg_root/lv1", mountpoint: "/lv1", fstype: "xfs",  type: "lvm" },
+          { device: "vg_root/lv2", mountpoint: "/lv2", fstype: "xfs",  type: "lvm" }
+        ]

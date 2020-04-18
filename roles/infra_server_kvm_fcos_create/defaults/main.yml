@@ -1,0 +1,17 @@
+---
+# defaults file for infra_server_kvm_fcos_create
+
+vm_name: coreos-dev-01
+vm_osinfo_id: http://fedoraproject.org/fedora/31
+vm_coreos_image: fedora-coreos-31.20200113.3.1-qemu.x86_64.qcow2
+vm_mem: 4096
+vm_mem_current: 4096
+vm_cpu: 4
+vm_disks: [
+  { device: "vda", format: "qcow2", size: "10", bootable: true, swap: false },
+  { device: "vdb", format: "qcow2", size: "2", bootable: false, swap: true }
+]
+vm_interfaces: [
+  { ifname: "eth0", bridge: "br0", mac: "96:01:b7:9d:03:8a", bootproto: dhcp, ip_addr: None, gateway: None, dns_servers: [] },
+  { ifname: "eth1", bridge: "br0", mac: "7e:9c:81:27:12:b6", bootproto: dhcp, ip_addr: None, gateway: None, dns_servers: [] }
+]

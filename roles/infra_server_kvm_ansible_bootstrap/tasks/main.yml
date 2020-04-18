@@ -1,0 +1,35 @@
+---
+# tasks file for infra_server_kvm_ansible_bootstrap
+
+# Create VM Directory
+- name: Create VM Keys Directory
+  file:
+    path: "{{ vm_keys_dir }}"
+    state: directory
+    mode: 0755
+
+# Create create-user.sh script for ansible user
+- name: Create create-user.sh script for ansible user
+  template:
+    src: create-user.sh.j2
+    dest: "{{ vm_dir }}/create-user.sh"
+
+# Create ansible user and set user password and ssh key pair
+- name: Create ansible user
+  command: virt-customize -a {{ vm_root_disk_filepath }} --run {{ vm_dir }}/create-user.sh
+
+- name: Set password for ansible user
+  command: virt-customize -a {{ vm_root_disk_filepath }} --password {{ vm_ansible_user }}:password:{{ vm_ansible_password }}
+
+- name: Create ansible user ssh key pair
+  openssh_keypair:
+    path: "{{ vm_keys_dir }}/id_{{ vm_ansible_user }}"
+    comment: Ansible Key
+
+# Inject Public key to ansible user
+- name: Inject Public key to ansible user
+  command: virt-customize -a {{ vm_root_disk_filepath }} --ssh-inject {{ vm_ansible_user }}:file:{{ vm_keys_dir }}/id_{{ vm_ansible_user }}.pub
+
+# Relabel FS
+- name: Relabel FS
+  command: virt-customize -a {{ vm_root_disk_filepath }} --selinux-relabel

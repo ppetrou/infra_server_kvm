@@ -1,0 +1,20 @@
+---
+# defaults file for infra_server_kvm_cloud_create
+
+vm_name: rhel7-dev-lab
+vm_hostname: rhel7-dev-lab.lab.local
+vm_osinfo_id: http://redhat.com/rhel/7.7
+vm_cloud_image: rhel-server-7.7-update-1-x86_64-kvm.qcow2
+vm_mem: 4096
+vm_mem_current: 4096
+vm_cpu: 1
+vm_disks: [
+  { device: "vda", size: 20G, bootable: true }
+]
+vm_mac_prefix: "bc:ae:80"
+vm_interfaces: []
+vm_default_partition: { device: "vda", part_num: 1, size: 10, unit: GiB }
+vm_partitions: []
+vm_volume_groups: []
+vm_logical_volumes: []
+vm_filesystems: []

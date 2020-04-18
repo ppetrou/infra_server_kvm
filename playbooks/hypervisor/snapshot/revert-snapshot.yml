@@ -1,0 +1,31 @@
+---
+- hosts: hypervisor
+  vars_files:
+    - ../../../vars/snapshot_vars.yml
+
+  vars_prompt:
+    - name: domain_name
+      prompt: "Domain Name"
+      private: no
+    - name: snapshot_name
+      prompt: "Snapshot Name"
+      private: no
+
+  tasks:
+
+    # Make sure KVM is shutdown
+    - name: Make sure KVM is shutdown
+      virt:
+        name: "{{ domain_name }}"
+        command: status
+      register: reg_vm_status
+
+    - name: Fail if KVM is not shutdown
+      fail:
+        msg: "{{ domain_name }} is not shutdown. Current State: {{ reg_vm_status.status }}"
+      when:
+        - reg_vm_status.status != "shutdown"
+
+    # Revert snapshot
+    - name: Revert snapshot
+      command: virsh -c {{ qemu_conn }} snapshot-revert --domain {{ domain_name }} --snapshotname {{ snapshot_name }}

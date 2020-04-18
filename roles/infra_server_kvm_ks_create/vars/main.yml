@@ -1,0 +1,23 @@
+---
+# vars file for infra_server_kvm_ks_create
+
+# ISO Location
+vm_iso_location: /home/ppetrou/ISO
+vm_iso_image_path: "{{ vm_iso_location }}/{{ vm_iso_image }}"
+
+# VM Directories
+vm_root_dir: /home/ppetrou/VirtualMachines
+vm_keys_dir: "{{ vm_root_dir }}/keys"
+vm_dir: "{{ vm_root_dir }}/{{ vm_name }}"
+
+# Kickstart
+vm_ks_file: ks.cfg
+vm_ks_filepath: "{{ vm_dir }}/{{ vm_ks_file }}"
+
+# Virt Install
+vm_virt_install_sh_filepath: "{{ vm_dir }}/virt-install.sh"
+
+# Automation User
+automation_user: { username: "ansible", password: "ansible" }
+automation_user_privkey_filepath: "{{ vm_keys_dir }}/id_{{ automation_user.username }}"
+automation_user_pubkey_filepath: "{{ vm_keys_dir }}/id_{{ automation_user.username }}.pub"

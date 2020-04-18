@@ -1,0 +1,30 @@
+---
+- hosts: hypervisor
+  vars_files:
+    - ../../../vars/hypervisor_vars.yml
+
+  vars_prompt:
+    - name: domain_name
+      prompt: "Domain Name"
+      private: no
+
+  tasks:
+
+    # Destroy domain
+    - name: Destroy domain
+      ignore_errors: true
+      command: virsh -c {{ qemu_conn }} destroy --domain {{ domain_name }}
+
+    # Delete domain
+    - name: Delete domain
+      command: virsh -c {{ qemu_conn }} undefine --domain {{ domain_name }}
+
+    # Delete Pool Directory
+    - name: Delete Pool Directory
+      file:
+        path: "{{ vm_root_dir }}/{{ domain_name }}"
+        state: absent
+
+    # Refresh Pool
+    - name: Refresh Pool
+      command: virsh -c {{ qemu_conn }} pool-refresh --pool {{ vm_pool_name }}

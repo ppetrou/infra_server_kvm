@@ -1,0 +1,29 @@
+---
+- hosts: hypervisor
+  vars_files:
+    - ../../../vars/pool_vars.yml
+
+  vars_prompt:
+    - name: pool_name
+      prompt: "Pool Name"
+      private: no
+
+  tasks:
+
+    - name: Create Pool Directory
+      file:
+        path: ~/{{ pool_name }}
+        state: directory
+        mode: 0755
+
+    # Create Pool
+    - name: Create Pool
+      command: virsh -c {{ qemu_conn }} pool-define-as {{ pool_name }} --type dir --target ~/{{ pool_name }}
+
+    # Start Pool
+    - name: Start Pool
+      command: virsh -c {{ qemu_conn }} pool-start {{ pool_name }}
+
+    # Auto-start Pool
+    - name: Auto-start Pool
+      command: virsh -c {{ qemu_conn }} pool-autostart {{ pool_name }}

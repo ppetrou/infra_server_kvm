@@ -1,0 +1,39 @@
+---
+- hosts: hypervisor
+  vars_files:
+    - ../../../vars/snapshot_vars.yml
+
+  tasks:
+
+    # List all KVMS
+    - name: list all VMs
+      virt:
+        command: list_vms
+      register: reg_all_vms
+
+    # Check all KVMs are shutdown
+    - name: Check all KVMs are shutdown
+      virt:
+        name: "{{ item }}"
+        command: status
+      register: reg_vm_status
+      with_items:
+        - "{{ reg_all_vms.list_vms }}"
+      failed_when:
+        - reg_vm_status.status in ['running','crashed','paused']
+
+    # List Domain Snapshosts
+    - name: List domain snapshots
+      command: virsh -c {{ qemu_conn }} snapshot-list --domain {{ item }} --name
+      register: reg_list_domain_snapshosts
+      with_items:
+        - "{{ reg_all_vms.list_vms }}"
+
+    # Delete snapshot
+    - name: Delete snapshot
+      command: virsh -c {{ qemu_conn }} snapshot-delete --domain {{ item.0.item }} --snapshotname {{ item.1 }}
+      with_subelements:
+       - "{{ reg_list_domain_snapshosts.results }}"
+       - stdout_lines
+      loop_control:
+        label: "Domain {{ item.0.item }} - Snapshot {{ item.1 }}"

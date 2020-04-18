@@ -1,0 +1,19 @@
+2020-02-17 20:24:57,844 p=8324 u=ppetrou n=ansible | ansible-playbook 2.9.4
+  config file = /home/ppetrou/Dev/ansible-devel/infra_server_kvm/ansible-local.cfg
+  configured module search path = ['/home/ppetrou/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python3.7/site-packages/ansible
+  executable location = /usr/bin/ansible-playbook
+  python version = 3.7.6 (default, Jan 30 2020, 09:44:41) [GCC 9.2.1 20190827 (Red Hat 9.2.1-1)]
+2020-02-17 20:24:57,844 p=8324 u=ppetrou n=ansible | Using /home/ppetrou/Dev/ansible-devel/infra_server_kvm/ansible-local.cfg as config file
+2020-02-17 20:24:58,172 p=8324 u=ppetrou n=ansible | PLAYBOOK: create-vm-cloud.yml ***********************************************************************************************************************************
+2020-02-17 20:24:58,172 p=8324 u=ppetrou n=ansible | 1 plays in playbooks/hypervisor/vm/sandbox/create-vm-cloud.yml
+2020-02-17 20:24:58,175 p=8324 u=ppetrou n=ansible | PLAY [hypervisor] ***********************************************************************************************************************************************
+2020-02-17 20:24:58,190 p=8324 u=ppetrou n=ansible | TASK [Gathering Facts] ******************************************************************************************************************************************
+2020-02-17 20:24:58,190 p=8324 u=ppetrou n=ansible | task path: /home/ppetrou/Dev/ansible-devel/infra_server_kvm/playbooks/hypervisor/vm/sandbox/create-vm-cloud.yml:2
+2020-02-17 20:24:59,364 p=8324 u=ppetrou n=ansible | ok: [localhost]
+2020-02-17 20:24:59,365 p=8324 u=ppetrou n=ansible | META: ran handlers
+2020-02-17 20:24:59,381 p=8324 u=ppetrou n=ansible | TASK [infra_server_kvm_cloud_create : Fix Default Partition] ****************************************************************************************************
+2020-02-17 20:24:59,381 p=8324 u=ppetrou n=ansible | task path: /home/ppetrou/Dev/ansible-devel/infra_server_kvm/roles/infra_server_kvm_cloud_create/tasks/main.yml:88
+2020-02-17 20:24:59,787 p=8324 u=ppetrou n=ansible | fatal: [localhost]: FAILED! => {"changed": false, "message": "", "msg": "h: No such file or directory"}
+2020-02-17 20:24:59,789 p=8324 u=ppetrou n=ansible | PLAY RECAP ******************************************************************************************************************************************************
+2020-02-17 20:24:59,790 p=8324 u=ppetrou n=ansible | localhost                  : ok=1    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   

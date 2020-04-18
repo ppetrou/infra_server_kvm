@@ -1,0 +1,75 @@
+<domain type='kvm'>
+  <name>{{ vm_name }}</name>
+  <metadata>
+    <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
+      <libosinfo:os id="{{ vm_osinfo_id }}"/>
+    </libosinfo:libosinfo>
+  </metadata>
+  <memory unit='MiB'>{{ vm_mem}}</memory>
+  <currentMemory unit='MiB'>{{ vm_mem_current }}</currentMemory>
+  <vcpu placement='static'>{{ vm_cpu }}</vcpu>
+  <os>
+    <type arch='x86_64' machine='pc-q35-3.1'>hvm</type>
+  </os>
+  <cpu mode='host-model' check='partial'>
+    <model fallback='allow'/>
+  </cpu>
+  <devices>
+    <emulator>/usr/bin/qemu-kvm</emulator>
+    {% for disk in vm_disks %}
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='{{ vm_dir }}/{{ disk.device }}.{{ disk.format }}'/>
+      <target dev='{{ disk.device }}' bus='virtio'/>
+      {% if disk.bootable %}
+      <boot order='1'/>
+      {% endif %}
+    </disk>
+    {% endfor %}
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <target dev='sda' bus='sata'/>
+      <readonly/>
+      <boot order='2'/>
+    </disk>
+    {% for interface in vm_interfaces %}
+    {% if interface.bridge is defined %}
+    <interface type='bridge'>
+      {% if interface.mac == '' %}
+      <mac address='{{ vm_generated_mac_addresses[loop.index0] }}'/>
+      {% else %}
+      <mac address='{{ interface.mac }}'/>
+      {% endif %}
+      <source bridge='{{ interface.bridge }}'/>
+      <model type='virtio'/>
+      <link state='up'/>
+    </interface>
+    {% endif%}
+    {% if interface.network is defined %}
+    <interface type='network'>
+      {% if interface.mac == '' %}
+      <mac address='{{ vm_generated_mac_addresses[loop.index0] }}'/>
+      {% else %}
+      <mac address='{{ interface.mac }}'/>
+      {% endif %}
+      <source network='{{ interface.network }}'/>
+      <model type='virtio'/>
+      <link state='up'/>
+    </interface>
+    {% endif %}
+    {% endfor %}
+    <channel type='spicevmc'>
+      <target type='virtio' name='com.redhat.spice.0'/>
+      <address type='virtio-serial' controller='0' bus='0' port='1'/>
+    </channel>
+    <graphics type='spice' autoport='yes' listen='0.0.0.0'>
+      <listen type='address' address='0.0.0.0'/>
+      <image compression='off'/>
+      <gl enable='no' rendernode='/dev/dri/by-path/pci-0000:00:02.0-render'/>
+    </graphics>
+    <video>
+      <model type='cirrus' vram='16384' heads='1' primary='yes'/>
+      <address type='pci' domain='0x0000' bus='0x0a' slot='0x01' function='0x0'/>
+    </video>
+  </devices>
+</domain>

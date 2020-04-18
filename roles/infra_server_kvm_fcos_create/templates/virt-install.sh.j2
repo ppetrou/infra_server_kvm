@@ -1,0 +1,5 @@
+virt-install --connect qemu:///system --name {{ vm_name }} --memory {{ vm_mem }} --vcpus {{ vm_cpu }} \
+--import {% for net in vm_interfaces %}--network bridge={{ net.bridge }},model=virtio,mac={{ net.mac }} {% endfor %} \
+{% for disk in vm_disks %}--disk={{ vm_dir }}/{{ disk.device }}.{{ disk.format }},format=qcow2,bus=virtio {% endfor %} \
+--graphics spice,listen=0.0.0.0 \
+--noautoconsole --qemu-commandline="-fw_cfg name=opt/com.coreos/config,file={{ vm_ignition_filepath }}"
