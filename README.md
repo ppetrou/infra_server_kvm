@@ -6,7 +6,7 @@ Please refer to each artefact for documentation. i.e. Playbooks or roles README.
 
 NOTE 1. Although this work is quite stable and tested it is still under development and lots of changes will follow such as code refactoring, bug fixes, CI, Automated testing etc. At this time you can use branch v1.0.0. More info to follow.
 
-NOTE 2. The roles have ONLY been tested on localhost setup i.e. The hypervisor is the ansible controller.
+NOTE 2. The roles have ONLY been tested on localhost Fedora 31 setup i.e. The Fedora 31 hypervisor is the ansible controller.
 
 Releases
 ==
