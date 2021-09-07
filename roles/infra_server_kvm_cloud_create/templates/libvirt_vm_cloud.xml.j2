@@ -19,13 +19,29 @@
     {% for disk in vm_disks %}
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
-      <source file='{{ vm_dir }}/{{ disk.device }}.{{ vm_disk_format }}'/>
+      <source file='{{ vm_root_dir }}/{{ vm_name }}_{{ disk.device }}.{{ vm_disk_format }}'/>
       <target dev='{{ disk.device }}' bus='virtio'/>
       {% if disk.bootable %}
       <boot order='1'/>
       {% endif %}
     </disk>
     {% endfor %}
+    {% if mgmt_nic.bridge is defined %}
+    <interface type='bridge'>
+      <mac address='{{ mgmt_nic.mac }}'/>
+      <source bridge='{{ mgmt_nic.bridge }}'/>
+      <model type='virtio'/>
+      <link state='up'/>
+    </interface>
+    {% endif%}
+    {% if mgmt_nic.network is defined %}
+    <interface type='network'>
+      <mac address='{{ mgmt_nic.mac }}'/>
+      <source network='{{ mgmt_nic.network }}'/>
+      <model type='virtio'/>
+      <link state='up'/>
+    </interface>
+    {% endif %}
     {% for interface in vm_interfaces %}
     {% if interface.bridge is defined %}
     <interface type='bridge'>

@@ -2,7 +2,7 @@
 # vars file for infra_server_kvm_cloud_create
 
 # Cloud Image Location
-cloud_image_loc: /home/ppetrou/IMG/qcow2
+cloud_image_loc: /home/ppetrou/IMG
 cloud_image_path: "{{ cloud_image_loc }}/{{ vm_cloud_image }}"
 
 # Cloud Image default partition
@@ -14,10 +14,15 @@ cloud_image_default_partition_size: 9.9990
 # VM Directories
 vm_root_dir: /home/ppetrou/VirtualMachines
 vm_keys_dir: "{{ vm_root_dir }}/keys"
-vm_dir: "{{ vm_root_dir }}/{{ vm_name }}"
+vm_xml_dir: "{{ vm_root_dir }}/xml"
 
 # VM Files
-vm_tmp_disk: "{{ vm_dir }}/tmp.qcow2"
+vm_tmp_disk: "{{ vm_root_dir }}/tmp.qcow2"
 
 # Disk Format
 vm_disk_format: qcow2
+
+# Management NIC
+mgmt_nic:
+  network: default
+  mac: "bc:ae:80:9b:b9:e8"

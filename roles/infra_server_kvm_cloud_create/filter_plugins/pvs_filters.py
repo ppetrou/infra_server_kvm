@@ -1,11 +1,11 @@
 from ansible.errors import AnsibleError
 from ansible.errors import AnsibleFilterError
 
-def pvs_dict_to_imagepath_list(vm_dir, pvs_dict, format):
+def pvs_dict_to_imagepath_list(vm_root_dir, vm_name, pvs_dict, format):
     image_path_list = []
 
     for p in pvs_dict:
-        tmp_path = vm_dir + "/" + p['device'] + "." + format
+        tmp_path = vm_root_dir + "/" + vm_name + '_' + p['device'] + "." + format
         image_path_list.append(tmp_path)
 
     for image_path in image_path_list:

@@ -1,12 +1,16 @@
 ---
 #tasks file for infra_server_kvm_cloud_create
 
-# Create VM Directory
-- name: Create VM Directory
+# Create Directories
+- name: Create Directories
   file:
-    path: "{{ vm_dir }}"
+    path: "{{ item }}"
     state: directory
     mode: 0755
+  loop:
+    - "{{ vm_root_dir }}"
+    - "{{ vm_keys_dir }}"
+    - "{{ vm_xml_dir }}"
 
 # Get Cloud Image
 - name: Get Cloud Image
@@ -34,38 +38,44 @@
   include_vars:
     file: sm_cred.yml
     name: sm_cred
+  when:
+    - "'redhat' in vm_osinfo_id" 
 
 # Install lvm2 package if we need LVM Storage
 # Register to Subscription Manager if a Red Hat Image
 - name: Register to Subscription Manager if a Red Hat Image
   command: virt-customize -a {{ vm_tmp_disk }} --sm-register --sm-credentials {{ sm_cred.sm_username }}:password:{{ sm_cred.sm_password }} --sm-attach auto
+  register: r_sm
   when:
     - "'redhat' in vm_osinfo_id"
-    - provision_lvm == True
+    - provision_lvm == true
+  failed_when:
+    - r_sm.rc == 1
+    - r_sm.stderr is not search("This system is already registered")
 
 # Install lvm2
 - name: Install lvm2
   command: virt-customize -a {{ vm_tmp_disk }} --install lvm2
-  when: provision_lvm == True
+  when: provision_lvm == true
 
 # Unregister from Subscription Manager if a Red Hat Image
 - name: Unregister from Subscription Manager if a Red Hat Image
   command: virt-customize -a {{ vm_tmp_disk }} --sm-unregister
   when:
     - "'redhat' in vm_osinfo_id"
-    - provision_lvm == True
+    - provision_lvm == true
 
 # Create root ssh key pair
 - name: Create root ssh key pair
   openssh_keypair:
-    path: "{{ vm_dir }}/{{ vm_name }}_root"
+    path: "{{ vm_keys_dir }}/{{ vm_name }}_root"
 
 # Inject Public key to root
 - name: Inject Public key to root
-  command: virt-customize -a {{ vm_tmp_disk }} --ssh-inject root:file:{{ vm_dir }}/{{ vm_name }}_root.pub
+  command: virt-customize -a {{ vm_tmp_disk }} --ssh-inject root:file:{{ vm_keys_dir }}/{{ vm_name }}_root.pub
 
 - name: Create Disks
-  command: qemu-img create -f {{ vm_disk_format }} {{ vm_dir }}/{{ vm_disk_create.device }}.{{ vm_disk_format }} -o preallocation=metadata,compat=1.1 {{ vm_disk_create.size }}
+  command: qemu-img create -f {{ vm_disk_format }} {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disk_create.device }}.{{ vm_disk_format }} -o preallocation=metadata,compat=1.1 {{ vm_disk_create.size }}
   loop: "{{ vm_disks }}"
   loop_control:
     extended: yes
@@ -73,15 +83,15 @@
 
 # Resize Cloud Image.
 - name: Resize Cloud Image
-  command: virt-resize --no-extra-partition {{ vm_tmp_disk }} {{ vm_dir }}/{{ vm_disks[0].device }}.{{ vm_disk_format }}
+  command: virt-resize --no-extra-partition {{ vm_tmp_disk }} {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }}
 
 # Relabel fs
 - name: Relabel FS
-  command: virt-customize -a {{ vm_dir }}/{{ vm_disks[0].device }}.{{ vm_disk_format }} --selinux-relabel
+  command: virt-customize -a {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }} --selinux-relabel
 
 - name: Process Default Cloud Partition - Resize to "{{ vm_default_partition.size }}" "{{ vm_default_partition.unit }}"
   gfs_part:
-    image_path: "{{ vm_dir }}/{{ vm_default_partition.device }}.{{ vm_disk_format }}"
+    image_path: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_default_partition.device }}.{{ vm_disk_format }}"
     device: "{{ vm_default_partition.device }}"
     number: "{{ vm_default_partition.part_num }}"
     #fstype: "{{ vm_default_partition.fstype }}"
@@ -93,7 +103,7 @@
 # Create Partitions
 - name: Create Partitions
   gfs_part:
-    image_path: "{{ vm_dir }}/{{ vm_part.device }}.{{ vm_disk_format }}"
+    image_path: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_part.device }}.{{ vm_disk_format }}"
     device: "{{ vm_part.device }}"
     number: "{{ vm_part.part_num }}"
     #fstype: "{{ vm_part.fstype }}"
@@ -109,7 +119,7 @@
 # Create Volume Groups
 - name: Create Volume Groups
   gfs_lvg:
-    image_paths: "{{ vm_dir|pvs_dict_to_imagepath_list(volgroup.pvs, vm_disk_format) }}"
+    image_paths: "{{ vm_root_dir|pvs_dict_to_imagepath_list(vm_name, volgroup.pvs, vm_disk_format) }}"
     vg: "{{ volgroup.vg }}"
     pvs: "{{ volgroup.pvs|pvs_dict_to_pvs_list }}"
     state: present
@@ -123,7 +133,7 @@
 # Create Logical Volume
 - name: Create Logical Volume
   gfs_lv:
-    image_paths: "{{ vm_dir|pvs_dict_to_imagepath_list(vm_volume_groups|selectattr('vg', 'equalto', logicalvol.vg)|map(attribute='pvs')|list|first, vm_disk_format) }}"
+    image_paths: "{{ vm_root_dir|pvs_dict_to_imagepath_list(vm_name, vm_volume_groups|selectattr('vg', 'equalto', logicalvol.vg)|map(attribute='pvs')|list|first, vm_disk_format) }}"
     lv: "{{ logicalvol.lv }}"
     vg: "{{ logicalvol.vg }}"
     size: "{{ logicalvol.size }}"
@@ -143,7 +153,7 @@
 # Setup filesystems
 - name: Create Filesystems
   gfs_fs:
-    image_paths: "{{ vm_dir|disk_list_to_imagepath_list(vm_disks, vm_disk_format) }}"
+    image_paths: "{{ vm_root_dir|disk_list_to_imagepath_list(vm_name, vm_disks, vm_disk_format) }}"
     device: "{{ filesystem.device }}"
     device_type: "{{ filesystem.type }}"
     use_image_mkfs_xfs: "{{ hypervisor_and_cloud_image_not_same and filesystem.fstype == 'xfs' }}"
@@ -158,7 +168,7 @@
 
 # Set hostname
 - name: Set hostname
-  command: virt-customize -a {{ vm_dir }}/{{ vm_disks[0].device }}.{{ vm_disk_format }} --hostname {{ vm_hostname }}
+  command: virt-customize -a {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }} --hostname {{ vm_hostname }}
 
 - name: Set vm_macs array to empty
   set_fact:
@@ -169,75 +179,28 @@
     vm_generated_mac_addresses: "{{ vm_generated_mac_addresses }} + [ '{{ vm_mac_prefix|random_mac }}' ]"
   loop: "{{ vm_interfaces }}"
   loop_control:
-    label: "{{ netifg_genmac.ifname }}"
+    label: "{{ netifg_genmac.nic_id }}"
     loop_var: netifg_genmac
-
-# Fix Network for Interfaces with user assigned MAC Address
-- name: Generate ifcfg network config for Interfaces with user assigned MAC Address
-  vars:
-    device: "{{ netifg_usermac.ifname }}"
-    hwaddr: "{{ netifg_usermac.mac }}"
-    bootproto: "{{ netifg_usermac.bootproto }}"
-    ip_addr: "{{ netifg_usermac.ip_addr }}"
-    gateway: "{{ netifg_usermac.gateway }}"
-    dns_servers: "{{ netifg_usermac.dns_servers }}"
-  template:
-    src: ifcfg-ethx.j2
-    dest: "{{ vm_dir }}/ifcfg-{{ netifg_usermac.ifname }}"
-  when: netifg_usermac.mac != ''
-  loop: "{{ vm_interfaces }}"
-  loop_control:
-    label: "Network Interface {{ netifg_usermac.ifname }}"
-    loop_var: netifg_usermac
-
-# Fix Network for Interfaces with random generated MAC Address
-- name: Generate ifcfg network config for Interfaces with random generated MAC Address
-  vars:
-    device: "{{ netifg_randommac.ifname }}"
-    hwaddr: "{{ vm_generated_mac_addresses[index] }}"
-    bootproto: "{{ netifg_randommac.bootproto }}"
-    ip_addr: "{{ netifg_randommac.ip_addr }}"
-    gateway: "{{ netifg_randommac.gateway }}"
-    dns_servers: "{{ netifg_randommac.dns_servers }}"
-  template:
-    src: ifcfg-ethx.j2
-    dest: "{{ vm_dir }}/ifcfg-{{ netifg_randommac.ifname }}"
-  when: netifg_randommac.mac == ''
-  loop: "{{ vm_interfaces }}"
-  loop_control:
-    index_var: index
-    label: "Network Interface {{ netifg_randommac.ifname }}"
-    loop_var: netifg_randommac
-
-- name: Copy ifcfg-ifname files to image
-  command: virt-customize -a {{ vm_dir }}/{{ vm_disks[0].device }}.{{ vm_disk_format }} --copy-in {{ vm_dir }}/ifcfg-{{ netifg_copy.ifname }}:/etc/sysconfig/network-scripts/
-  loop: "{{ vm_interfaces }}"
-  loop_control:
-    label: "Network Interface {{ netifg_copy.ifname }}"
-    loop_var: netifg_copy
 
 # Create VM
 - name: Template VM
   template:
     src: libvirt_vm_cloud.xml.j2
-    dest: "{{ vm_dir }}/{{ vm_name }}.xml"
+    dest: "{{ vm_xml_dir }}/{{ vm_name }}.xml"
 
 - name: Define vm from XML
   virt:
    command: define
-   xml: "{{ lookup('file', '{{ vm_dir }}/{{ vm_name }}.xml') }}"
+   xml: "{{ lookup('file', '{{ vm_xml_dir }}/{{ vm_name }}.xml') }}"
 
-# Clean up
-- name: Delete generated ifcfg files
-  file:
-    path: "{{ vm_dir }}/ifcfg-{{ netifg_clean_cfg.ifname }}"
-    state: absent
-  loop: "{{ vm_interfaces }}"
-  loop_control:
-    label: "Network Interface Config {{ netifg_clean_cfg.ifname }}"
-    loop_var: netifg_clean_cfg
+# Start the VM
+- name: Start VM
+  virt:
+    name: "{{ vm_name }}"
+    state: running
 
-- name: Delete Provided Cloud Image
+# Clean up vendor cloud image
+- name: Delete Vendor Cloud Image
   file:
     path: "{{ vm_tmp_disk }}"
     state: absent

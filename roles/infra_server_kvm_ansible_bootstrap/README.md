@@ -3,6 +3,15 @@ infra_server_kvm_ansible_bootstrap
 
 Bootstraps a KVM to be used with ansible
 
+TODO
+
+Change the role so that it gets the management network ip and also generates an inventory
+
+# Get Management NIC IP address command
+mgmt_nix_get_ip: "virsh -c qemu:///system net-dhcp-leases default | grep {{ mgmt_nic.mac }} | awk '{ print $5 }'"
+
+
+
 Requirements
 ------------
 
@@ -80,3 +89,5 @@ Author Information
 Petros Petrou
 ppetrou@gmail.com
 ```
+
+

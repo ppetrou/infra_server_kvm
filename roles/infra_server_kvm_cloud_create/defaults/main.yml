@@ -1,10 +1,10 @@
 ---
 # defaults file for infra_server_kvm_cloud_create
 
-vm_name: rhel7-dev-lab
-vm_hostname: rhel7-dev-lab.lab.local
-vm_osinfo_id: http://redhat.com/rhel/7.7
-vm_cloud_image: rhel-server-7.7-update-1-x86_64-kvm.qcow2
+vm_name: centos8-lab1
+vm_hostname: centos8-stream.lab.local
+vm_osinfo_id: http://centos.org/centos-stream/8
+vm_cloud_image: CentOS-Stream-GenericCloud-8-20210603.0.x86_64.qcow
 vm_mem: 4096
 vm_mem_current: 4096
 vm_cpu: 1
