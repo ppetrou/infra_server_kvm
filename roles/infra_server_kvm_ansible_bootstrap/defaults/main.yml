@@ -2,5 +2,5 @@
 # defaults file for infra_server_kvm_ansible_bootstrap
 
 vm_ansible_user: ansible
-vm_ansible_password: ansible123
-vm_name: rhel7-coredns
+vm_ansible_password: welcome1
+vm_names: [] 

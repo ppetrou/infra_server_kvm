@@ -4,8 +4,8 @@
 # VM Directories
 vm_root_dir: /home/ppetrou/VirtualMachines
 vm_keys_dir: "{{ vm_root_dir }}/keys"
-vm_dir: "{{ vm_root_dir }}/{{ vm_name }}"
 
 # VM Files
-vm_root_disk_filename: "vda.qcow2"
-vm_root_disk_filepath: "{{ vm_dir }}/{{ vm_root_disk_filename }}"
+vm_root_disk_device: "vda"
+vm_root_disk_device_format: "qcow2"
+
