@@ -3,10 +3,13 @@
 
 vm_name: rhel7-dev-01
 vm_osinfo_id: http://redhat.com/rhel/7.6
+vm_uefi_boot: false
 vm_mem: 4096
 vm_mem_current: 4096
 vm_cpu: 2
 vm_disks:
-  - { device: "vda", format: "qcow2", size: "10G", bootable: true }
+  - { device: "vda", format: "qcow2", size: "10", unit: "G", bootable: true, storage_pool: "test_pool" }
 vm_mac_prefix: "bc:ae:80"
-vm_interfaces: []
+vm_interfaces: [
+  #- { mac: "bc:ae:80:9b:b9:e8", network: "control_plane", model: "virtio" }
+]

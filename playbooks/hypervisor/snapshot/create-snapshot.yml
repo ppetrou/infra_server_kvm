@@ -12,6 +12,7 @@
       private: no
     - name: snapshot_desc
       prompt: "Snapshot Description"
+      default: "Not Provided by User"
       private: no
 
   tasks:

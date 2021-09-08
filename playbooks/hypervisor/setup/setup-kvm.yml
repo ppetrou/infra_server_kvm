@@ -16,14 +16,9 @@
 
     # Install KVM-QEMU
     - name: Install KVM-QEMU
-      package:
-        name: "{{ item }}"
+      yum:
+        name: ['qemu-kvm', 'libvirt', 'virt-install', 'libguestfs-tools', 'python3-libguestfs']
         state: present
-      with_items:
-        - qemu-kvm
-        - libvirt
-        - virt-install
-        - libguestfs-tools
 
     # Enable and start libvirtd
     - name: Enable libvirtd

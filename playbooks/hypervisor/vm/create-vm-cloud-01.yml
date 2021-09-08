@@ -1,0 +1,25 @@
+---
+- hosts: hypervisor
+  roles:
+    - role: infra_server_kvm_cloud_create
+      vars:
+        vm_name: rhel7-nested-01
+        vm_hostname: rhel7-nested-01.lab.local
+        vm_osinfo_id: http://redhat.com/rhel/7.7
+        vm_cloud_image: rhel-server-7.7-update-1-x86_64-kvm.qcow2
+        vm_mem: 1024
+        vm_mem_current: 1024
+        vm_cpu: 1
+        vm_disks: [
+          { device: "vda", format: "qcow2", size: 15G, bootable: true },
+          { device: "vdb", format: "qcow2", size: 1G, bootable: false }
+        ]
+        vm_mac_prefix: "bc:ae:80"
+        vm_interfaces: [
+          { ifname: "eth0", bridge: "virbr0", mac: "", bootproto: dhcp, ip_addr: None, netmask: None, gateway: None, dns_servers: [] }
+        ]
+        default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
+        vm_partitions: []
+        vm_volume_groups: []
+        vm_logical_volumes: []
+        vm_filesystems: []

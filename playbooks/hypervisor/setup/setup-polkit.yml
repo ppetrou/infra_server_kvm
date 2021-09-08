@@ -10,3 +10,9 @@
       template:
         src: ../../../templates/libvirt-manage.rules.j2
         dest: /etc/polkit-1/rules.d/80-libvirt-manage.rules
+
+    # Restart polkit
+    - name: Restart polkit
+      service:
+        name: polkit
+        state: restarted

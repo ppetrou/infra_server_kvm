@@ -1,5 +1,6 @@
 ---
 - hosts: hypervisor
+  become: true
   tasks:
 
     # Include infra_server_kvm_cloud_create
@@ -10,11 +11,4 @@
         vm_ansible_password: "{{ item.vm_ansible_password }}"
         vm_name: "{{ item.vm_name }}"
       with_items:
-        - { vm_ansible_user: ansible,
-            vm_ansible_password: ansible123,
-            vm_name: coredns
-          }
-        - { vm_ansible_user: ansible,
-            vm_ansible_password: ansible123,
-            vm_name: satellite-lab
-          }
+        - { vm_ansible_user: ansible, vm_ansible_password: welcome1, vm_name: rhds11 }

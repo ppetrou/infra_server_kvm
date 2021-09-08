@@ -2,5 +2,5 @@
   vm_root_dir: /home/ppetrou/{{ vm_pool_name }}
   vm_pool_name: VirtualMachines
   qemu_conn: qemu:///system
-  username: ppetrou
+  username: ansible
   kvm_module: kvm_intel

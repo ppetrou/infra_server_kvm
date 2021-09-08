@@ -1,48 +1,55 @@
 ---
 # tasks file for infra_server_kvm_noos_create
 
-# Create VM Directory
-- name: Create VM Directory
-  file:
-    path: "{{ vm_dir }}"
-    state: directory
-    mode: 0755
+- name: Add Storage Pool
+  libvirt_storage_pool:
+    uri: qemu:///system
+    name: pool01
+    path: /home/ppetrou/pool01
+    state: absent
 
-# Check is images exist and create disks
-- name: Check is images exist
-  stat:
-    path: "{{ vm_dir }}/{{ vm_disk_check.device }}.{{ vm_disk_check.format }}"
-  register: reg_stat_images
-  loop: "{{ vm_disks }}"
-  loop_control:
-    loop_var: vm_disk_check
-
-- name: Create Disks
-  command: qemu-img create -f {{ vm_disk_create.format }} {{ vm_dir }}/{{ vm_disk_create.device }}.{{ vm_disk_create.format }} -o preallocation=metadata,compat=1.1 {{ vm_disk_create.size }}
-  when: "reg_stat_images.results[ansible_loop.index0].stat.exists == false"
-  loop: "{{ vm_disks }}"
-  loop_control:
-    extended: yes
-    loop_var: vm_disk_create
-
-# Generate Mac Addresses if not provided
-- name: Set vm_macs array to empty
-  set_fact:
-    vm_generated_mac_addresses: []
-
-- name: Generate MAC Addresses
-  set_fact:
-    vm_generated_mac_addresses: "{{ vm_generated_mac_addresses }} + [ '{{ vm_mac_prefix|random_mac }}' ]"
-  loop: "{{ vm_interfaces }}"
-  loop_control:
-    loop_var: netifg_genmac
-
-- name: Template VM
-  template:
-    src: libvirt_vm.xml.j2
-    dest: "{{ vm_dir }}/{{ vm_name }}.xml"
-
-- name: Define vm from XML
-  virt:
-   command: define
-   xml: "{{ lookup('file', '{{ vm_dir }}/{{ vm_name }}.xml') }}"
+# # Create VM Directory
+# - name: Create VM Directory
+#   file:
+#     path: "{{ vm_dir }}"
+#     state: directory
+#     mode: 0755
+# 
+# # Check is images exist and create disks
+# - name: Check is images exist
+#   stat:
+#     path: "{{ vm_dir }}/{{ vm_disk_check.device }}.{{ vm_disk_check.format }}"
+#   register: reg_stat_images
+#   loop: "{{ vm_disks }}"
+#   loop_control:
+#     loop_var: vm_disk_check
+# 
+# - name: Create Disks
+#   command: qemu-img create -f {{ vm_disk_create.format }} {{ vm_dir }}/{{ vm_disk_create.device }}.{{ vm_disk_create.format }} -o preallocation=metadata,compat=1.1 {{ vm_disk_create.size }}
+#   when: "reg_stat_images.results[ansible_loop.index0].stat.exists == false"
+#   loop: "{{ vm_disks }}"
+#   loop_control:
+#     extended: yes
+#     loop_var: vm_disk_create
+# 
+# # Generate Mac Addresses if not provided
+# - name: Set vm_macs array to empty
+#   set_fact:
+#     vm_generated_mac_addresses: []
+# 
+# - name: Generate MAC Addresses
+#   set_fact:
+#     vm_generated_mac_addresses: "{{ vm_generated_mac_addresses }} + [ '{{ vm_mac_prefix|random_mac }}' ]"
+#   loop: "{{ vm_interfaces }}"
+#   loop_control:
+#     loop_var: netifg_genmac
+# 
+# - name: Template VM
+#   template:
+#     src: libvirt_vm.xml.j2
+#     dest: "{{ vm_dir }}/{{ vm_name }}.xml"
+# 
+# - name: Define vm from XML
+#   virt:
+#    command: define
+#    xml: "{{ lookup('file', '{{ vm_dir }}/{{ vm_name }}.xml') }}"

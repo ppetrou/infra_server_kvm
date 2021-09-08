@@ -1,0 +1,10 @@
+<network>
+  <name>{{ net_name }}</name>
+  <forward mode="nat"/>
+  <domain name="{{ net_name }}"/>
+  <ip address="{{ net_ip }}" netmask="{{ net_netmask }}">
+    <dhcp>
+      <range start="{{ net_dhcp_start }}" end="{{ net_dhcp_end }}"/>
+    </dhcp>
+  </ip>
+</network>
