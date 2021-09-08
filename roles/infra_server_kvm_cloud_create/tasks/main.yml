@@ -204,3 +204,7 @@
   file:
     path: "{{ vm_tmp_disk }}"
     state: absent
+
+
+
+    
