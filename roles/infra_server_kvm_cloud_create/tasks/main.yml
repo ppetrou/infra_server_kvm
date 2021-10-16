@@ -205,6 +205,18 @@
     path: "{{ vm_tmp_disk }}"
     state: absent
 
+# # Generate Management Network MAC Address Inventory
+# - name: Init Management Network MAC Address Inventory
+#   file:
+#     path: /tmp/macs
+#     state: touch
+
+# - name: Update Management Network MAC Address Inventory
+#   lineinfile:
+#     path: /tmp/macs
+#     line: "{{ vm_name }}:{{ mgmt_nic_mac }}"
+#     insertbefore: BOF
+
 
 
     

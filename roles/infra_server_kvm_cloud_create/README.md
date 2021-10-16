@@ -11,6 +11,10 @@ Any other user needs to be added manually.
 * An SSH private/public key for the root user will also be generated and injected to image. It will be stored in the value of vm_keys_dir variable.
 
 
+Need to mention this somewhere.. meta.yaml??
+ ansible-galaxy collection install ansible.netcommon
+
+
 !WARNING!
 
 The role does NOT validate whether the variable values are correct.

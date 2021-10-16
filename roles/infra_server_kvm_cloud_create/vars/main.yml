@@ -24,6 +24,6 @@ vm_disk_format: qcow2
 
 # Management NIC
 mgmt_nic_mac_prefix: "bc:ae:80"
-mgmt_nic:
-  network: default
-  mac: "{{ mgmt_nic_mac_prefix|random_mac }}"
+mgmt_nic_network: default
+mgmt_nic_mac: "{{ mgmt_nic_mac_prefix|random_mac }}"
+

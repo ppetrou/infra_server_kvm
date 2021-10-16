@@ -20,35 +20,65 @@
     path: "{{ vm_keys_dir }}/id_{{ vm_ansible_user }}"
     comment: Ansible Key
 
-# Set root disk filepath list to empty
-- name: Set root disk filepath list to empty
-  set_fact:
-    vm_root_disk_filepaths: []
-
-# Make sure the vms are shutdown
+# Make sure the VM is shutdown
 # Shutdown the VM
 - name: Shutdown the VM
   virt:
-    name: "{{ item }}"
+    name: "{{ vm_name }}"
     state: shutdown
-  loop: "{{ vm_names }}"
-
-# Populate root disk filepath list 
-- name: Populate root disk filepath list 
-  set_fact:
-    vm_root_disk_filepaths: "{{ vm_root_disk_filepaths }} + [ '{{ vm_root_dir }}/{{ item }}_{{ vm_root_disk_device }}.{{ vm_root_disk_device_format }}' ]"
-  loop: "{{ vm_names }}"
 
 # Create ansible user, set user password and inject ssh-key
 - name: Create ansible user
-  command: virt-customize -a {{ item }} --run /tmp/create-user.sh
-  loop: "{{ vm_root_disk_filepaths }}"
+  command: virt-customize -a {{ vm_root_disk_filepath }} --run /tmp/create-user.sh
 
 - name: Set password for ansible user
-  command: virt-customize -a {{ item }} --password {{ vm_ansible_user }}:password:{{ vm_ansible_password }} --ssh-inject {{ vm_ansible_user }}:file:{{ vm_keys_dir }}/id_{{ vm_ansible_user }}.pub
-  loop: "{{ vm_root_disk_filepaths }}"
+  command: virt-customize -a {{ vm_root_disk_filepath }} --password {{ vm_ansible_user }}:password:{{ vm_ansible_password }} --ssh-inject {{ vm_ansible_user }}:file:{{ vm_keys_dir }}/id_{{ vm_ansible_user }}.pub
  
 # Relabel FS
 - name: Relabel FS
-  command: virt-customize -a {{ item }} --selinux-relabel
-  loop: "{{ vm_root_disk_filepaths }}"
+  command: virt-customize -a {{ vm_root_disk_filepath }} --selinux-relabel
+
+# Get the Domain XML
+- name: Get the Domain XML
+  virt:
+    command: get_xml
+    name: "{{ vm_name }}"
+  register: r_vm_xml
+
+# Get Management Network NIC MAC address
+- name: Get Management Network NIC MAC address
+  block:
+    - name: Get Management Interface MAC XML
+      community.general.xml:
+        xmlstring: "{{ r_vm_xml.get_xml }}"
+        xpath: /domain/devices/interface[source[@network='management']]/mac
+        content: attribute
+      register: r_vm_mgmt_mac
+
+    - name: Get the Management NIC MAC Address from XML
+      set_fact:
+        vm_mgmt_nic_mac: "{{ r_vm_mgmt_mac.matches[0].mac.address }}"
+
+# Get Management Network NIC IP Address
+- name: Get Management Network NIC IP Address
+  block:
+    - name: Get Management Network NIC Address/Network using net-dhcp-leases
+      shell: virsh -c qemu:///system net-dhcp-leases --network {{ vm_mgmt_nic_network|quote }} --mac {{ vm_mgmt_nic_mac|quote }} | awk 'NR == 3 { print $5 }'
+      register: r_mgmt_nic_prefix_and_host
+    
+    - name: Get the Management Network IP Address 
+      set_fact:
+        vm_mgmt_ip_addr: "{{ r_mgmt_nic_prefix_and_host.stdout|ansible.netcommon.ipaddr('address') }}"
+
+# Touch Ansible Inventory
+- name: Touch Ansible Inventory
+  file:
+    path: "{{ generated_inventory_path }}"
+    state: touch
+
+# Generate Ansible Inventorys
+- name: Generate Ansible Inventory
+  lineinfile:
+    path: "{{ generated_inventory_path }}"
+    line: "{{ vm_name }} ansible_host={{ vm_mgmt_ip_addr }}"
+    insertafter: EOF

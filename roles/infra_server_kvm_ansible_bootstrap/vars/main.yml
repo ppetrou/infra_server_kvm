@@ -2,10 +2,16 @@
 # vars file for infra_server_kvm_ansible_bootstrap
 
 # VM Directories
-vm_root_dir: /home/ppetrou/VirtualMachines
+vm_root_dir: /kvm
 vm_keys_dir: "{{ vm_root_dir }}/keys"
 
 # VM Files
 vm_root_disk_device: "vda"
 vm_root_disk_device_format: "qcow2"
+vm_root_disk_filepath: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_root_disk_device }}.{{ vm_root_disk_device_format }}"
 
+# Management Network
+vm_mgmt_nic_network: "management"
+
+# Generated Inventory
+generated_inventory_path: /tmp/hosts

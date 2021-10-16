@@ -1,7 +1,0 @@
-virt-install --connect qemu:///system --name {{ vm_name }} --memory {{ vm_mem }} --vcpus {{ vm_cpu }} \
-{% for disk in vm_disks %}--disk size={{ disk.size }},path={{ vm_dir }}/{{ disk.device }}.{{ disk.format }} {% endfor %} \
-{% for net in vm_interfaces %}--network bridge={{ net.bridge }},model=virtio,mac={% if net.mac == '' %}{{ vm_generated_mac_addresses[loop.index0] }}{% else %}{{ net.mac }}{% endif %} {% endfor %} \
---import \
---os-variant {{ vm_osinfo_id }} \
---graphics spice,listen=0.0.0.0 \
---noautoconsole --noreboot

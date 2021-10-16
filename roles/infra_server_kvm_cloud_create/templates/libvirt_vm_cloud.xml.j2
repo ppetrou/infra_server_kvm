@@ -26,18 +26,18 @@
       {% endif %}
     </disk>
     {% endfor %}
-    {% if mgmt_nic.bridge is defined %}
+    {% if mgmt_nic_bridge is defined %}
     <interface type='bridge'>
-      <mac address='{{ mgmt_nic.mac }}'/>
-      <source bridge='{{ mgmt_nic.bridge }}'/>
+      <mac address='{{ mgmt_nic_mac }}'/>
+      <source bridge='{{ mgmt_nic_bridge }}'/>
       <model type='virtio'/>
       <link state='up'/>
     </interface>
     {% endif%}
-    {% if mgmt_nic.network is defined %}
+    {% if mgmt_nic_network is defined %}
     <interface type='network'>
-      <mac address='{{ mgmt_nic.mac }}'/>
-      <source network='{{ mgmt_nic.network }}'/>
+      <mac address='{{ mgmt_nic_mac }}'/>
+      <source network='{{ mgmt_nic_network }}'/>
       <model type='virtio'/>
       <link state='up'/>
     </interface>

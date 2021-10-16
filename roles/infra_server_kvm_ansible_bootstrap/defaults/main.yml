@@ -3,4 +3,4 @@
 
 vm_ansible_user: ansible
 vm_ansible_password: welcome1
-vm_names: [] 
+vm_name: ""

@@ -1,14 +1,15 @@
 ---
 - hosts: hypervisor
-  become: true
   tasks:
 
-    # Include infra_server_kvm_cloud_create
+    # Include infra_server_kvm_ansible_bootstrap
     - include_role:
         name : infra_server_kvm_ansible_bootstrap
       vars:
-        vm_ansible_user: "{{ item.vm_ansible_user }}"
-        vm_ansible_password: "{{ item.vm_ansible_password }}"
+        vm_root_dir: /kvm
         vm_name: "{{ item.vm_name }}"
-      with_items:
-        - { vm_ansible_user: ansible, vm_ansible_password: welcome1, vm_name: rhds11 }
+      loop:
+        - vm_name: centos8-01
+        - vm_name: centos8-02
+        - vm_name: centos8-03
+

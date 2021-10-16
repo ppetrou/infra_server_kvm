@@ -1,41 +1,85 @@
 ---
 - hosts: hypervisor
-  roles:
-    - role: infra_server_kvm_cloud_create
+  tasks:
+
+    - name: Provision KVM
+      include_role:
+        name: infra_server_kvm_cloud_create
       vars:
-        vm_name: centos8-dev-lab1
-        vm_hostname: centos8-stream.lab.local
-        vm_osinfo_id: http://centos.org/centos-stream/8
-        vm_cloud_image: CentOS-Stream-GenericCloud-8-20210603.0.x86_64.qcow2
-        vm_mem: 4096
-        vm_mem_current: 4096
-        vm_cpu: 4
-        vm_disks: [
-          { device: "vda", size: 40G, bootable: true },
-          { device: "vdb", size: 30G, bootable: false }
-        ]
-        vm_mac_prefix: "bc:ae:80"
-        vm_interfaces: [
-          { nic_id: "NIC1", network: "overcloud", mac: "" },
-          { nic_id: "NIC2", network: "overcloud", mac: "" },
-          { nic_id: "NIC3", network: "overcloud", mac: "" }
-        ]
-        default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
-        vm_partitions: [
-          { device: "vda", part_num: 2, size: 2,  unit: GiB },
-          { device: "vda", part_num: 3, size: 5,  unit: GiB },
-          { device: "vdb", part_num: 1, size: 5,  unit: GiB },
-          { device: "vdb", part_num: 2, size: 10, unit: GiB }
-        ]
-        vm_volume_groups: [
-          { vg: vg_root, pvs: [ { device: "vda", parts: [2] }, { device: "vdb", parts: [1, 2] } ] }
-        ]
-        vm_logical_volumes: [
-          { lv: lv1, vg: vg_root, size: 2048, unit: MiB },
-          { lv: lv2, vg: vg_root, size: 4096, unit: MiB }
-        ]
-        vm_filesystems: [
-          { device: "vda3",        mountpoint: "swap", fstype: "swap", type: "standard" },
-          { device: "vg_root/lv1", mountpoint: "/lv1", fstype: "xfs",  type: "lvm" },
-          { device: "vg_root/lv2", mountpoint: "/lv2", fstype: "xfs",  type: "lvm" }
-        ]
+        cloud_image_loc: /home/ppetrou/Images
+        vm_root_dir: /kvm
+        vm_name: "{{ item.vm_name }}"
+        vm_hostname: "{{ item.vm_hostname }}"
+        vm_osinfo_id: "{{ item.vm_osinfo_id }}"
+        vm_cloud_image: "{{ item.vm_cloud_image }}"
+        vm_mem: "{{ item.vm_mem }}"
+        vm_mem_current: "{{ item.vm_mem_current }}"
+        vm_cpu: "{{ item.vm_cpu }}"
+        vm_disks: "{{ item.vm_disks }}"
+        vm_mac_prefix: "{{ item.vm_mac_prefix }}"
+        vm_interfaces: "{{ item.vm_interfaces }}"
+        default_partition: "{{ item.default_partition }}"
+        vm_partitions: "{{ item.vm_partitions }}"
+        vm_volume_groups: "{{ item.vm_volume_groups }}"
+        vm_logical_volumes: "{{ item.vm_logical_volumes }}"
+        vm_filesystems: "{{ item.vm_filesystems }}"
+      loop:
+        - vm_name: centos8-dev-lab1
+          vm_hostname: centos8-stream.lab.local
+          vm_osinfo_id: http://centos.org/centos-stream/8
+          vm_cloud_image: CentOS-Stream-GenericCloud-8-20210603.0.x86_64.qcow2
+          vm_mem: 4096
+          vm_mem_current: 4096
+          vm_cpu: 4
+          vm_disks: [
+            { device: "vda", size: 40G, bootable: true }
+          ]
+          vm_mac_prefix: "bc:ae:80"
+          vm_interfaces: [
+            { nic_id: "NIC1", network: "overcloud00", mac: "" },
+            { nic_id: "NIC2", network: "overcloud00", mac: "" }
+          ]
+          default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
+          vm_partitions: [
+          ]
+          vm_volume_groups: [
+          ]
+          vm_logical_volumes: [
+          ]
+          vm_filesystems: [
+          ]
+        - vm_name: centos8-dev-lab2
+          vm_hostname: centos8-stream.lab.local
+          vm_osinfo_id: http://centos.org/centos-stream/8
+          vm_cloud_image: CentOS-Stream-GenericCloud-8-20210603.0.x86_64.qcow2
+          vm_mem: 4096
+          vm_mem_current: 4096
+          vm_cpu: 4
+          vm_disks: [
+            { device: "vda", size: 40G, bootable: true },
+            { device: "vdb", size: 30G, bootable: false }
+          ]
+          vm_mac_prefix: "bc:ae:80"
+          vm_interfaces: [
+            { nic_id: "NIC1", network: "overcloud00", mac: "" },
+            { nic_id: "NIC2", network: "overcloud00", mac: "" }
+          ]
+          default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
+          vm_partitions: [
+            { device: "vda", part_num: 2, size: 2,  unit: GiB },
+            { device: "vda", part_num: 3, size: 5,  unit: GiB },
+            { device: "vdb", part_num: 1, size: 5,  unit: GiB },
+            { device: "vdb", part_num: 2, size: 10, unit: GiB }
+          ]
+          vm_volume_groups: [
+            { vg: vg_root, pvs: [ { device: "vda", parts: [2] }, { device: "vdb", parts: [1, 2] } ] }
+          ]
+          vm_logical_volumes: [
+            { lv: lv1, vg: vg_root, size: 2048, unit: MiB },
+            { lv: lv2, vg: vg_root, size: 4096, unit: MiB }
+          ]
+          vm_filesystems: [
+            { device: "vda3",        mountpoint: "swap", fstype: "swap", type: "standard" },
+            { device: "vg_root/lv1", mountpoint: "/lv1", fstype: "xfs",  type: "lvm" },
+            { device: "vg_root/lv2", mountpoint: "/lv2", fstype: "xfs",  type: "lvm" }
+          ]
