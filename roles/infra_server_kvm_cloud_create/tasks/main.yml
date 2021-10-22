@@ -40,10 +40,11 @@
     name: sm_cred
   when:
     - "'redhat' in vm_osinfo_id" 
+    - provision_lvm == true
 
 # Install lvm2 package if we need LVM Storage
 # Register to Subscription Manager if a Red Hat Image
-- name: Register to Subscription Manager if a Red Hat Image
+- name: Register to Subscription Manager if a Red Hat Image and LVM is required
   command: virt-customize -a {{ vm_tmp_disk }} --sm-register --sm-credentials {{ sm_cred.sm_username }}:password:{{ sm_cred.sm_password }} --sm-attach auto
   register: r_sm
   when:
@@ -59,7 +60,7 @@
   when: provision_lvm == true
 
 # Unregister from Subscription Manager if a Red Hat Image
-- name: Unregister from Subscription Manager if a Red Hat Image
+- name: Unregister from Subscription Manager if a Red Hat Image and LVM is required
   command: virt-customize -a {{ vm_tmp_disk }} --sm-unregister
   when:
     - "'redhat' in vm_osinfo_id"
@@ -204,19 +205,3 @@
   file:
     path: "{{ vm_tmp_disk }}"
     state: absent
-
-# # Generate Management Network MAC Address Inventory
-# - name: Init Management Network MAC Address Inventory
-#   file:
-#     path: /tmp/macs
-#     state: touch
-
-# - name: Update Management Network MAC Address Inventory
-#   lineinfile:
-#     path: /tmp/macs
-#     line: "{{ vm_name }}:{{ mgmt_nic_mac }}"
-#     insertbefore: BOF
-
-
-
-    

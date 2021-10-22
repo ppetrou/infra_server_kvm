@@ -1,0 +1,10 @@
+---
+- hosts: hypervisor
+  tasks:  
+
+    - name: Provision KVM
+      include_role:
+        name: infra_server_kvm_cloud_create
+      vars:
+        cloud_image_loc: /home/ppetrou/Images
+        vm_root_dir: /kvm
