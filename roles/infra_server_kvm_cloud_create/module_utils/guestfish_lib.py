@@ -83,7 +83,7 @@ class PartitionListResult:
         self.partition_info_list = partition_info_list
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description + "\n" + str(self.partition_info_list)
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description + "\n" + str(self.partition_info_list)
         return str_rep
 
 class PartitionAddResult:
@@ -92,7 +92,7 @@ class PartitionAddResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class PartitionDelResult:
@@ -101,7 +101,7 @@ class PartitionDelResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class PartitionResizeResult:
@@ -110,7 +110,7 @@ class PartitionResizeResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class VGAddResult:
@@ -119,7 +119,7 @@ class VGAddResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class VGDelResult:
@@ -128,7 +128,7 @@ class VGDelResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class LVAddResult:
@@ -137,7 +137,7 @@ class LVAddResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class LVDelResult:
@@ -146,7 +146,7 @@ class LVDelResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class FSCreateResult:
@@ -155,7 +155,7 @@ class FSCreateResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class FSDelResult:
@@ -164,7 +164,7 @@ class FSDelResult:
         self.description = description
 
     def __str__(self):
-        str_rep = "CODE: " + str(self.code) + "\t" + "DECRIPTION: " + self.description
+        str_rep = "CODE: " + str(self.code) + "\t" + "DESCRIPTION: " + self.description
         return str_rep
 
 class ExInvalidStorageType(Exception):
@@ -281,6 +281,10 @@ class ExFilesystemCreateError(Exception):
         super(Exception, self).__init__(message)
 
 class ExFilesystemDelError(Exception):
+    def __init__(self, message):
+        super(Exception, self).__init__(message)
+
+class ExFilesystemResizeError(Exception):
     def __init__(self, message):
         super(Exception, self).__init__(message)
 
@@ -517,6 +521,7 @@ class GFSLibUtil:
                     partition_exists = False
 
             if partition_exists:
+                
                 # Convert size in Bytes
                 new_size_in_bytes = self.convert_storage_units_to_bytes(size, unit)
                 # Calculate the extra space to add to partition
@@ -704,16 +709,60 @@ class GFSLibUtil:
                 raise ExDeviceDoesNotExistError(device)
             else:
                 raise ExFilesystemDelError(ex)
+    
+     # Resize Filesystem
+    def resize_fs(self, device, device_type, fstype, use_image_mkfs_xfs, mountpoint):
+        try:
+            cloud_device = ""
+
+            if device_type == 'standard':
+                cloud_device = self.convert_device_to_cloud_device(device, True)
+            else:
+                # LVM Device
+                cloud_device = "/dev/" + device
+
+            # Get the filesystems
+            fs_info_list = self.list_filesystems()
+
+            # Check if filesystem exists
+            for fs_info in fs_info_list.filesystems:
+                if fs_info.filesystem == cloud_device and fs_info.fstype == 'unknown':
+                    raise ExFilesystemDoesNotExistError(cloud_device)
+
+            self.gfs.mount(cloud_device, mountpoint)
+            if fstype == "xfs":
+                if use_image_mkfs_xfs:
+                    mkfs_xfs_cmd = "xfs_growfs " + mountpoint
+                    self.gfs.sh(mkfs_xfs_cmd)                   
+                else:
+                    self.gfs.xfs_growfs(mountpoint)
+            else:
+                self.gfs.resize2fs(mountpoint)
+
+            self.gfs.umount(mountpoint)
+
+            result = FSCreateResult(0,"OK")
+            return result
+
+        except ExFilesystemDoesNotExistError as ex_fs_exists_er:
+            raise
+        except Exception as ex:
+            if 'expecting a device name' in str(ex):
+                raise ExDeviceDoesNotExistError(device)
+            elif 'File exists' in str(ex):
+                raise ExMountDirExistError(mountpoint)
+            else:
+                raise ExFilesystemResizeError(ex)
+
 
 def main():
     tryme()
 
 def tryme():
-    print("Enter operation: \n 1. List \n 2. Add \n 3. Delete \n 4. Resize \n 5. Init Partition Table \n 6. Create VG One Disk \n 7. Create VG Two Disks \n 8. Delete VG \n 9. Create FS \n 10. Delete FS \n")
+    print("Enter operation: \n 1. List \n 2. Add \n 3. Delete \n 4. Resize \n 5. Init Partition Table \n 6. Create VG One Disk \n 7. Create VG Two Disks \n 8. Delete VG \n 9. Create FS \n 10. Delete FS \n 11. Resize FS \n")
     type = int(input())
 
-    #gfs_util = GFSLibUtil(["/home/ppetrou/VirtualMachines/rhel7-dev-01/newdisk1.qcow2"])
-    gfs_util = GFSLibUtil(["/home/ppetrou/VirtualMachines/rhel7-dev-lab/vda.qcow2","/home/ppetrou/VirtualMachines/rhel7-dev-lab/vdb.qcow2"])
+    gfs_util = GFSLibUtil(["/kvm/large_vda.qcow2"])
     part = "vdb"
     part_add_num = 2
 
@@ -755,6 +804,10 @@ def tryme():
 
     if type == 10:
         result = gfs_util.delete_fs("vda3", "standard")
+        print(result)
+    
+    if type == 11:
+        result = gfs_util.resize_fs("vda1", "standard", "xfs", False, "/")
         print(result)
 
 

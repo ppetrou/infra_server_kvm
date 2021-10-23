@@ -135,7 +135,7 @@ def run_module():
         use_image_mkfs_xfs=dict(type='bool', required=False, default=False),
         force=dict(type='bool', required=False, default=False),
         mountpoint=dict(type='str', required=True),
-        state=dict(type='str', required=True, choices=['present', 'absent'])
+        state=dict(type='str', required=True, choices=['present', 'absent', 'resize'])
     )
 
     # seed the result dict in the object
@@ -186,6 +186,8 @@ def run_module():
         elif state == "absent":
             # Remove Filesystem
             gfs_result = gfs_util.delete_fs(device, device_type)
+        elif state == "resize":
+            gfs_result = gfs_util.resize_fs(device, device_type, fstype, use_image_mkfs_xfs, mountpoint)
 
         result['message'] = str(gfs_result)
         # TODO Check if the state changed in the result object and report back
@@ -202,6 +204,8 @@ def run_module():
         module.fail_json(msg=str(ex_fs_add), **result)
     except ExFilesystemDelError as ex_fs_remove:
         module.fail_json(msg=str(ex_fs_remove), **result)
+    except ExFilesystemResizeError as ex_fs_resize:
+        module.fail_json(msg=str(ex_fs_resize), **result)
     except Exception as ex:
         module.fail_json(msg=str(ex), **result)
 

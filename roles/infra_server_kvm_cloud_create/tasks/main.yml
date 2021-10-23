@@ -151,8 +151,19 @@
   set_fact:
     hypervisor_and_cloud_image_not_same: "{{ ansible_facts['distribution'] not in vm_osinfo_id and ansible_facts['distribution_version'] not in vm_osinfo_id}}"
 
+# Setup Default Filesystem
+- name: Setup Default Filesystem
+  gfs_fs:
+    image_paths: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_default_partition.device }}.{{ vm_disk_format }}"
+    device: "{{ vm_default_filesystem.device }}"
+    device_type: "{{ vm_default_filesystem.type }}"
+    use_image_mkfs_xfs: "{{ hypervisor_and_cloud_image_not_same and vm_default_filesystem.fstype == 'xfs' }}"
+    fstype: "{{ vm_default_filesystem.fstype }}"
+    mountpoint: "{{ vm_default_filesystem.mountpoint }}"
+    state: resize
+
 # Setup filesystems
-- name: Create Filesystems
+- name: Setup Filesystems
   gfs_fs:
     image_paths: "{{ vm_root_dir|disk_list_to_imagepath_list(vm_name, vm_disks, vm_disk_format) }}"
     device: "{{ filesystem.device }}"
