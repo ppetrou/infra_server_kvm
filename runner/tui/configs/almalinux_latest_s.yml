@@ -1,0 +1,20 @@
+{ 
+  "vm_desc": "AlmaLinux 8 (S)",
+  "vm_spec": "2 vCPU, 4GB RAM, 32GB Disk, 1 Management NIC DHCP",
+  "vm_name": "almalinux-small-lab1",
+  "vm_hostname": "almalinux-small-lab1.lab.local",
+  "vm_osinfo_id": "http://almalinux.org/almalinux/8",
+  "vm_cloud_image": "AlmaLinux-8-GenericCloud-latest.x86_64.qcow2",
+  "vm_mem": 4096,
+  "vm_mem_current": 2048,
+  "vm_cpu": 2,
+  "vm_disks": [{ "device": "vda", "size": "32G", "bootable": True }],
+  "vm_mac_prefix": "bc:ae:80",
+  "vm_interfaces": [],
+  "vm_default_partition": { "device": "vda", "part_num": 1, "fstype": "xfs", "size": 31, "unit": "GiB" },
+  "vm_partitions": [],
+  "vm_volume_groups": [],
+  "vm_logical_volumes": [],
+  "vm_default_filesystem": { "device": "vda1", "mountpoint": "/", "fstype": "xfs", "type": "standard" },
+  "vm_filesystems": [] 
+}
