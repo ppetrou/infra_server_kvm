@@ -33,7 +33,7 @@
 
 - name: Set password for ansible user
   command: virt-customize -a {{ vm_root_disk_filepath }} --password {{ vm_ansible_user }}:password:{{ vm_ansible_password }} --ssh-inject {{ vm_ansible_user }}:file:{{ vm_keys_dir }}/id_{{ vm_ansible_user }}.pub
- 
+
 # Relabel FS
 - name: Relabel FS
   command: virt-customize -a {{ vm_root_disk_filepath }} --selinux-relabel
@@ -51,7 +51,7 @@
     - name: Get Management Interface MAC XML
       community.general.xml:
         xmlstring: "{{ r_vm_xml.get_xml }}"
-        xpath: /domain/devices/interface[source[@network='management']]/mac
+        xpath: /domain/devices/interface[source[@network='{{ vm_mgmt_nic_network }}']]/mac
         content: attribute
       register: r_vm_mgmt_mac
 
