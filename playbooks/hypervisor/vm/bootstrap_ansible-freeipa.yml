@@ -1,0 +1,17 @@
+---
+- hosts: hypervisor
+  tasks:
+
+    # Include infra_server_kvm_ansible_bootstrap
+    - include_role:
+        name : infra_server_kvm_ansible_bootstrap
+      vars:
+        vm_root_dir: /kvm
+        vm_name: "{{ item.vm_name }}"
+        vm_mgmt_nic_network: "default"
+      loop:
+        - vm_name: freeipa_server
+        - vm_name: ipa-client-01
+        - vm_name: ipa-client-02
+
+

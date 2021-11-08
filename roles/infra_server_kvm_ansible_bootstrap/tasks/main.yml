@@ -27,6 +27,11 @@
     name: "{{ vm_name }}"
     state: shutdown
 
+# Wait 2 seconds
+- name: Sleep for 2 seconds
+  wait_for:
+    timeout: 2
+
 # Create ansible user, set user password and inject ssh-key
 - name: Create ansible user
   command: virt-customize -a {{ vm_root_disk_filepath }} --run /tmp/create-user.sh

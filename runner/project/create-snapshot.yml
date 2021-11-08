@@ -1,0 +1,21 @@
+---
+- hosts: hypervisor
+
+  tasks:
+
+    # Make sure KVM is shutdown
+    - name: Make sure KVM is shutdown
+      virt:
+        name: "{{ domain_name }}"
+        command: status
+      register: reg_vm_status
+
+    - name: Fail if KVM is not shutdown
+      fail:
+        msg: "{{ domain_name }} is not shutdown. Current State: {{ reg_vm_status.status }}"
+      when:
+        - reg_vm_status.status != "shutdown"
+
+    # Create snapshot
+    - name: Create snapshot
+      command: virsh -c qemu:///system snapshot-create-as --domain {{ domain_name }} --name "init" --description "Initial Snapshot" --atomic

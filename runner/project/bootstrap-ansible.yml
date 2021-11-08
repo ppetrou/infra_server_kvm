@@ -1,0 +1,13 @@
+---
+- hosts: hypervisor
+  tasks:
+
+    # Include infra_server_kvm_ansible_bootstrap
+    - include_role:
+        name : infra_server_kvm_ansible_bootstrap
+      vars:
+        vm_root_dir: /kvm
+        vm_mgmt_nic_network: "default"
+
+
+

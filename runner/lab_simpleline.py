@@ -12,6 +12,8 @@ from simpleline.input.input_handler import InputHandler
 from simpleline.render.screen import InputState
 from simpleline.render.adv_widgets import GetInputScreen, YesNoDialog
 
+from datetime import datetime
+
 import yaml
 import os
 import copy
@@ -252,9 +254,16 @@ class MainMenu(UIScreen):
             return InputState.PROCESSED
         
         if key == "p":
-            play_book = "create-vm-cloud.yml"
+            play_book_cloud_create = "create-vm-cloud.yml"
+            play_book_ansible_bootstrap = "bootstrap-ansible.yml"
+            play_book_snapshot = "create-snapshot.yml"
+
+            date_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+            generated_inventory = "/tmp/hosts_{0}".format(date_time)
             
             prov_results = []
+            ansible_bootstrap_results = []
+            snapshot_results = []
             start_provisioning = True
         
             # Get the start time
@@ -262,10 +271,24 @@ class MainMenu(UIScreen):
 
             for kvm_conf in KVMHolder.kvms: 
                 kvm_start_time = time.time()
-                r = ansible_runner.run(private_data_dir=".", playbook=play_book, extravars=kvm_conf)
+                r = ansible_runner.run(private_data_dir=".", playbook=play_book_cloud_create, extravars=kvm_conf)
                 kvm_end_time = time.time()
                 kvm_provisioning_duration = kvm_end_time - kvm_start_time   
                 prov_results.append({"kvm": kvm_conf["vm_name"], "status": r.status, "rc": r.rc, "provtime": kvm_provisioning_duration})
+            
+            for kvm_conf in KVMHolder.kvms:
+                ansible_bootstrap_start_time = time.time()
+                r = ansible_runner.run(private_data_dir=".", playbook=play_book_ansible_bootstrap, extravars={ "vm_name": kvm_conf["vm_name"], "generated_inventory_path": generated_inventory})
+                ansible_bootstrap_kvm_end_time = time.time()
+                kvm_boostrap_duration = ansible_bootstrap_kvm_end_time - ansible_bootstrap_start_time   
+                ansible_bootstrap_results.append({"kvm": kvm_conf["vm_name"], "status": r.status, "rc": r.rc, "bootstrap_time": kvm_boostrap_duration})
+            
+            for kvm_conf in KVMHolder.kvms:
+                snaphost_start_time = time.time()
+                r = ansible_runner.run(private_data_dir=".", playbook=play_book_snapshot, extravars={ "domain_name": kvm_conf["vm_name"]})
+                snapshot_end_time = time.time()
+                snapshost_duration = snapshot_end_time - snaphost_start_time   
+                snapshot_results.append({"kvm": kvm_conf["vm_name"], "status": r.status, "rc": r.rc, "snapshot_time": snapshost_duration})
 
             # Get the end time
             end_time = time.time()
@@ -278,8 +301,22 @@ class MainMenu(UIScreen):
             for res in prov_results:
                 print("{0}\t{1}\t{2}\t{3}(s)".format(res["kvm"].ljust(20), res["status"].ljust(15), str(res["rc"]).ljust(5), int(res["provtime"])))
             
+            print("\n")
+
+            print("{0}\t{1}\t{2}\t{3}".format("KVM".ljust(20),"STATUS".ljust(15),"RC".ljust(5),"ANSIBLE BOOTSTRAP TIME"))
+            for res in ansible_bootstrap_results:
+                print("{0}\t{1}\t{2}\t{3}(s)".format(res["kvm"].ljust(20), res["status"].ljust(15), str(res["rc"]).ljust(5), int(res["bootstrap_time"])))
+
+            print("\n")
+
+            print("{0}\t{1}\t{2}\t{3}".format("KVM".ljust(20),"STATUS".ljust(15),"RC".ljust(5),"SNAPSHOT TIME"))
+            for res in snapshot_results:
+                print("{0}\t{1}\t{2}\t{3}(s)".format(res["kvm"].ljust(20), res["status"].ljust(15), str(res["rc"]).ljust(5), int(res["snapshot_time"])))
+
             print("")
             print("Total Provisining Time: {0}(s)".format(int(provisioning_duration)))
+            print("You can find an auto-generated ansible inventory in {0}".format(generated_inventory))
+            print("A snapshot named 'init' has been auto-created for each KVM. You can use this to revert the KVMs to the original provisioned state at any time :)")
 
             return InputState.PROCESSED_AND_CLOSE 
             

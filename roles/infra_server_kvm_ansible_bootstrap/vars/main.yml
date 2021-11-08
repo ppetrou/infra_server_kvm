@@ -11,7 +11,7 @@ vm_root_disk_device_format: "qcow2"
 vm_root_disk_filepath: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_root_disk_device }}.{{ vm_root_disk_device_format }}"
 
 # Management Network
-vm_mgmt_nic_network: "default"
+vm_mgmt_nic_network: default
 
 # Generated Inventory
 generated_inventory_path: /tmp/hosts
