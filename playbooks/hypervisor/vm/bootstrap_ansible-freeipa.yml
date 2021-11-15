@@ -10,8 +10,6 @@
         vm_name: "{{ item.vm_name }}"
         vm_mgmt_nic_network: "default"
       loop:
-        - vm_name: freeipa_server
-        - vm_name: ipa-client-01
-        - vm_name: ipa-client-02
+        - vm_name: centos8-xsmall-lab1
 
 

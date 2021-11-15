@@ -20,29 +20,6 @@
     path: "{{ vm_keys_dir }}/id_{{ vm_ansible_user }}"
     comment: Ansible Key
 
-# Make sure the VM is shutdown
-# Shutdown the VM
-- name: Shutdown the VM
-  virt:
-    name: "{{ vm_name }}"
-    state: shutdown
-
-# Wait 2 seconds
-- name: Sleep for 2 seconds
-  wait_for:
-    timeout: 2
-
-# Create ansible user, set user password and inject ssh-key
-- name: Create ansible user
-  command: virt-customize -a {{ vm_root_disk_filepath }} --run /tmp/create-user.sh
-
-- name: Set password for ansible user
-  command: virt-customize -a {{ vm_root_disk_filepath }} --password {{ vm_ansible_user }}:password:{{ vm_ansible_password }} --ssh-inject {{ vm_ansible_user }}:file:{{ vm_keys_dir }}/id_{{ vm_ansible_user }}.pub
-
-# Relabel FS
-- name: Relabel FS
-  command: virt-customize -a {{ vm_root_disk_filepath }} --selinux-relabel
-
 # Get the Domain XML
 - name: Get the Domain XML
   virt:
@@ -64,16 +41,29 @@
       set_fact:
         vm_mgmt_nic_mac: "{{ r_vm_mgmt_mac.matches[0].mac.address }}"
 
-# Get Management Network NIC IP Address
-- name: Get Management Network NIC IP Address
-  block:
-    - name: Get Management Network NIC Address/Network using net-dhcp-leases
-      shell: virsh -c qemu:///system net-dhcp-leases --network {{ vm_mgmt_nic_network|quote }} --mac {{ vm_mgmt_nic_mac|quote }} | awk 'NR == 3 { print $5 }'
-      register: r_mgmt_nic_prefix_and_host
-    
-    - name: Get the Management Network IP Address 
-      set_fact:
-        vm_mgmt_ip_addr: "{{ r_mgmt_nic_prefix_and_host.stdout|ansible.netcommon.ipaddr('address') }}"
+# Check for an existing dhcp lease
+- name: Check for an existing dhcp lease
+  ansible.builtin.shell: virsh -c qemu:///system net-dhcp-leases --network {{ vm_mgmt_nic_network|quote }} --mac {{ vm_mgmt_nic_mac|quote }} | awk 'NR == 3 { print $5 }'
+  register: r_existing_dhcp_lease
+
+# Start the VM
+- name: Start the VM
+  virt:
+    name: "{{ vm_name }}"
+    state: running
+  when: r_existing_dhcp_lease.stdout == ""
+
+# Wait for a dhcp lease
+- name: Wait for a dhcp lease
+  ansible.builtin.shell: virsh -c qemu:///system net-dhcp-leases --network {{ vm_mgmt_nic_network|quote }} --mac {{ vm_mgmt_nic_mac|quote }} | awk 'NR == 3 { print $5 }'
+  register: r_mgmt_nic_prefix_and_host
+  until: r_mgmt_nic_prefix_and_host.stdout != ""
+  retries: 10
+  delay: 2
+
+- name: Get the Management Network IP Address 
+  set_fact:
+    vm_mgmt_ip_addr: "{{ r_mgmt_nic_prefix_and_host.stdout|ansible.netcommon.ipaddr('address') }}"
 
 # Touch Ansible Inventory
 - name: Touch Ansible Inventory
@@ -81,9 +71,36 @@
     path: "{{ generated_inventory_path }}"
     state: touch
 
-# Generate Ansible Inventorys
-- name: Generate Ansible Inventory
+# Update Ansible Inventorys
+- name: Update Ansible Inventory
   lineinfile:
     path: "{{ generated_inventory_path }}"
     line: "{{ vm_name }} ansible_host={{ vm_mgmt_ip_addr }}"
     insertafter: EOF
+
+# Shutdown the VM
+- name: Shutdown the VM
+  virt:
+    name: "{{ vm_name }}"
+    state: shutdown
+
+# Wait for the VM to shutdown
+- name: Wait for the VM to shutdown
+  virt:
+    name: "{{ vm_name }}"
+    command: status
+  register: r_vm_status
+  until: r_vm_status.status == "shutdown"
+  retries: 10
+  delay: 2
+
+# Create ansible user, set user password and inject ssh-key
+- name: Create ansible user
+  command: virt-customize -a {{ vm_root_disk_filepath }} --run /tmp/create-user.sh
+
+- name: Set password for ansible user
+  command: virt-customize -a {{ vm_root_disk_filepath }} --password {{ vm_ansible_user }}:password:{{ vm_ansible_password }} --ssh-inject {{ vm_ansible_user }}:file:{{ vm_keys_dir }}/id_{{ vm_ansible_user }}.pub
+
+# Relabel FS
+- name: Relabel FS
+  command: virt-customize -a {{ vm_root_disk_filepath }} --selinux-relabel

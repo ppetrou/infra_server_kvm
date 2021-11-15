@@ -205,12 +205,6 @@
    command: define
    xml: "{{ lookup('file', '{{ vm_xml_dir }}/{{ vm_name }}.xml') }}"
 
-# Start the VM
-- name: Start VM
-  virt:
-    name: "{{ vm_name }}"
-    state: running
-
 # Clean up vendor cloud image
 - name: Delete Vendor Cloud Image
   file:
