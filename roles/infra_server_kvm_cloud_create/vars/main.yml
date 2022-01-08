@@ -2,7 +2,7 @@
 # vars file for infra_server_kvm_cloud_create
 
 # Cloud Image Location
-cloud_image_loc: /home/ppetrou/IMG
+cloud_image_loc: /lab/img
 cloud_image_path: "{{ cloud_image_loc }}/{{ vm_cloud_image }}"
 
 # Cloud Image default partition
@@ -12,9 +12,9 @@ cloud_image_default_device_prefix: /dev/sd
 cloud_image_default_partition_size: 9.9990
 
 # VM Directories
-vm_root_dir: /home/ppetrou/VirtualMachines
-vm_keys_dir: "{{ vm_root_dir }}/keys"
-vm_xml_dir: "{{ vm_root_dir }}/xml"
+vm_root_dir: /lab/kvm
+vm_keys_dir: /lab/keys
+vm_xml_dir: /lab/xml
 
 # VM Files
 vm_tmp_disk: "{{ vm_root_dir }}/tmp.qcow2"
@@ -27,3 +27,5 @@ mgmt_nic_mac_prefix: "bc:ae:80"
 mgmt_nic_network: default
 mgmt_nic_mac: "{{ mgmt_nic_mac_prefix|random_mac }}"
 
+# Emulator
+emulator: /usr/libexec/qemu-kvm

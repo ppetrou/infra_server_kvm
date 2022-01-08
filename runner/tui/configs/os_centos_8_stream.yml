@@ -1,0 +1,4 @@
+{
+  "vm_osinfo_id": "http://centos.org/centos-stream/8",
+  "vm_cloud_image": "CentOS-Stream-GenericCloud-8-20210603.0.x86_64.qcow2"
+}  

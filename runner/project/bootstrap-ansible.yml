@@ -6,7 +6,9 @@
     - include_role:
         name : infra_server_kvm_ansible_bootstrap
       vars:
-        vm_root_dir: /kvm
+        vm_root_dir: /lab/kvm
+        vm_keys_dir: /lab/keys
+        vm_xml_dir: /lab/xml
         vm_mgmt_nic_network: "default"
 
 

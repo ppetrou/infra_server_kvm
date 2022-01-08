@@ -6,5 +6,7 @@
       include_role:
         name: infra_server_kvm_cloud_create
       vars:
-        cloud_image_loc: /home/ppetrou/Images
-        vm_root_dir: /kvm
+        cloud_image_loc: /lab/img
+        vm_root_dir: /lab/kvm
+        vm_keys_dir: /lab/keys
+        vm_xml_dir: /lab/xml

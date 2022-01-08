@@ -58,7 +58,7 @@
   ansible.builtin.shell: virsh -c qemu:///system net-dhcp-leases --network {{ vm_mgmt_nic_network|quote }} --mac {{ vm_mgmt_nic_mac|quote }} | awk 'NR == 3 { print $5 }'
   register: r_mgmt_nic_prefix_and_host
   until: r_mgmt_nic_prefix_and_host.stdout != ""
-  retries: 10
+  retries: 50
   delay: 2
 
 - name: Get the Management Network IP Address 

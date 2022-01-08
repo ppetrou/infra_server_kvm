@@ -1,0 +1,18 @@
+{ 
+  "vm_desc": "(XXS)",
+  "vm_spec": "1 vCPU, 2GB RAM, 16GB Disk, 1 Management NIC DHCP",
+  "vm_name": "xxsmall-lab1",
+  "vm_hostname": "xxsmall-lab1.lab.local",
+  "vm_mem": 2048,
+  "vm_mem_current": 1024,
+  "vm_cpu": 1,
+  "vm_disks": [{ "device": "vda", "size": "16G", "bootable": True }],
+  "vm_mac_prefix": "bc:ae:80",
+  "vm_interfaces": [],
+  "vm_default_partition": { "device": "vda", "part_num": 1, "fstype": "xfs", "size": 15, "unit": "GiB" },
+  "vm_partitions": [],
+  "vm_volume_groups": [],
+  "vm_logical_volumes": [],
+  "vm_default_filesystem": { "device": "vda1", "mountpoint": "/", "fstype": "xfs", "type": "standard" },
+  "vm_filesystems": [] 
+}

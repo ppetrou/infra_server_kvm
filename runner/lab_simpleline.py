@@ -31,17 +31,31 @@ class ConfigParser():
         kvm_configs = []
 
         for config in os.listdir(config_path):
-            if config.endswith(".yml"):
+            if config.startswith("config_"):
                 with open(config_path + "/" + config, "r") as stream:
                     yaml_config = yaml.safe_load(stream)
                     # Append Extra Keys
                     yaml_config.update({"ex_vm_completed": False})
                     kvm_configs.append(yaml_config)
         
-        return kvm_configs 
+        return kvm_configs
+
+    def parse_os_configs(self, config_path):
+
+        os_configs = []
+
+        for config in os.listdir(config_path):
+            if config.startswith("os_"):
+                with open(config_path + "/" + config, "r") as stream:
+                    yaml_config = yaml.safe_load(stream)
+                    # Append Extra Keys
+                    os_configs.append(yaml_config)
+        
+        return os_configs
 
 class KVMHolder():
     kvms = []
+    selected_os = None
 
     @staticmethod
     def add_kvm(kvm):
@@ -118,6 +132,55 @@ class KVMConfigurationViewEditList(UIScreen):
         return key
 
 # UI Screens
+
+class KVMOSConfigurationList(UIScreen):
+
+    def __init__(self):
+        super().__init__(title=u"Available KVM OS")
+    
+    def refresh(self, args=None):
+        super().refresh()
+
+        self.os_num_range = range(1, len(args) + 1)
+        self.key_list = []
+        for k in self.os_num_range:
+            self.key_list.append(str(k))
+
+        os_column = ListColumnContainer(columns=1, numbering=True)
+
+        for os_config in args:
+            vm_osinfo_id = os_config["vm_osinfo_id"]
+            vm_cloud_image = os_config["vm_cloud_image"]
+            if KVMHolder.selected_os != None and (KVMHolder.selected_os["vm_osinfo_id"] == vm_osinfo_id):
+                os_completed = True
+            else:
+                os_completed = False
+
+            os_text = "{0} - {1}".format(vm_osinfo_id, vm_cloud_image)
+            tmp_widget = CheckboxWidget(key='x', title=vm_osinfo_id, text=vm_cloud_image, completed=os_completed)
+            os_column.add(tmp_widget)
+
+        self.window.add(os_column)
+    
+    def prompt(self, args=None):
+        prompt = super().prompt()
+
+        # Add Help Option
+        prompt.add_help_option("Help")
+        return prompt
+        
+    def input(self, args, key):
+
+        if key in self.key_list:
+
+            # Get selected OS from the OS List
+            selected_os_config = copy.deepcopy(args[int(key)-1])       
+            KVMHolder.selected_os = selected_os_config
+
+            return InputState.PROCESSED_AND_REDRAW
+                
+        return key
+
 class KVMConfigurationList(UIScreen):
 
     def __init__(self):
@@ -134,14 +197,14 @@ class KVMConfigurationList(UIScreen):
         kvm_column = ListColumnContainer(columns=1, numbering=True)
         
         # Menu Items
-        for kvm in args:
+        for kvm in args["kvms"]:
             vm_desc = kvm["vm_desc"]
             vm_spec = kvm["vm_spec"]           
             vm_name = kvm["vm_name"]
             vm_hostname = kvm["vm_hostname"]
             vm_completed = kvm["ex_vm_completed"]
 
-            kvm_text = "{0} - {1}".format(vm_desc, vm_spec)
+            kvm_text = "{0} - {1}".format(vm_desc.ljust(5), vm_spec)
 
             tmp_widget = TextWidget(kvm_text)
             kvm_column.add(tmp_widget)
@@ -159,7 +222,16 @@ class KVMConfigurationList(UIScreen):
 
         if key in self.key_list:
             # Get selected KVM from the KVM List
-            selected_kvm_config = copy.deepcopy(args[int(key)-1])
+            selected_kvm_config = copy.deepcopy(args["kvms"][int(key)-1])
+
+            kvm_os_conf_list = KVMOSConfigurationList()
+            ScreenHandler.push_screen_modal(kvm_os_conf_list, args=args["os"])
+
+            vm_osinfo_id = KVMHolder.selected_os["vm_osinfo_id"]
+            vm_cloud_image = KVMHolder.selected_os["vm_cloud_image"]
+
+            selected_kvm_config.update({"vm_osinfo_id": vm_osinfo_id})
+            selected_kvm_config.update({"vm_cloud_image": vm_cloud_image})
 
             customize_config = YesNoDialog("Do you want to update the KVM Config?")
             ScreenHandler.push_screen_modal(customize_config)
@@ -170,6 +242,8 @@ class KVMConfigurationList(UIScreen):
                 ScreenHandler.push_screen_modal(kvm_custom_config, args=selected_kvm_config)
             
             KVMHolder.add_kvm(selected_kvm_config)
+
+            print(selected_kvm_config)
 
             return InputState.PROCESSED_AND_REDRAW
                 
@@ -328,6 +402,7 @@ if __name__ == "__main__":
     # Read the KVM Configuration
     c_parser = ConfigParser()
     kvms = c_parser.parse_configs("./tui/configs")
+    os_configs = c_parser.parse_os_configs("./tui/configs")
 
     # Initialize application (create scheduler and event loop).
     App.initialize()
@@ -337,7 +412,7 @@ if __name__ == "__main__":
 
     # Schedule screen to the screen scheduler.
     # This can be called only after App.initialize().
-    ScreenHandler.schedule_screen(screen, args=kvms)
+    ScreenHandler.schedule_screen(screen, args={"kvms":kvms, "os":os_configs})
 
     # Run the application. You must have some screen scheduled
     # otherwise it will end in an infinite loop.

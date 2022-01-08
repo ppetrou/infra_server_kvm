@@ -9,13 +9,13 @@
   <currentMemory unit='MiB'>{{ vm_mem_current }}</currentMemory>
   <vcpu placement='static'>{{ vm_cpu }}</vcpu>
   <os>
-    <type arch='x86_64' machine='pc-q35-3.1'>hvm</type>
+    <type arch='x86_64' machine='q35'>hvm</type>
   </os>
   <cpu mode='host-model' check='partial'>
     <model fallback='allow'/>
   </cpu>
   <devices>
-    <emulator>/usr/bin/qemu-kvm</emulator>
+    <emulator>{{ emulator }}</emulator>
     {% for disk in vm_disks %}
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
@@ -68,18 +68,39 @@
     </interface>
     {% endif %}
     {% endfor %}
-    <channel type='spicevmc'>
-      <target type='virtio' name='com.redhat.spice.0'/>
-      <address type='virtio-serial' controller='0' bus='0' port='1'/>
+    <serial type="pty">
+      <target type="isa-serial" port="0">
+        <model name="isa-serial"/>
+      </target>
+    </serial>
+    <console type="pty">
+      <target type="serial" port="0"/>
+    </console>
+    <channel type="unix">
+      <target type="virtio" name="org.qemu.guest_agent.0"/>
+      <address type="virtio-serial" controller="0" bus="0" port="1"/>
     </channel>
-    <graphics type='spice' autoport='yes' listen='0.0.0.0'>
-      <listen type='address' address='0.0.0.0'/>
-      <image compression='off'/>
-      <gl enable='no' rendernode='/dev/dri/by-path/pci-0000:00:02.0-render'/>
+    <channel type="spicevmc">
+      <target type="virtio" name="com.redhat.spice.0"/>
+      <address type="virtio-serial" controller="0" bus="0" port="2"/>
+    </channel>
+    <input type="mouse" bus="ps2"/>
+    <input type="keyboard" bus="ps2"/>
+    <graphics type="spice" autoport="yes">
+      <listen type="address"/>
+      <image compression="off"/>
     </graphics>
+    <audio id="1" type="spice"/>
     <video>
-      <model type='cirrus' vram='16384' heads='1' primary='yes'/>
-      <address type='pci' domain='0x0000' bus='0x0a' slot='0x01' function='0x0'/>
+      <model type="qxl" ram="65536" vram="65536" vgamem="16384" heads="1" primary="yes"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x01" function="0x0"/>
     </video>
+    <memballoon model="virtio">
+      <address type="pci" domain="0x0000" bus="0x05" slot="0x00" function="0x0"/>
+    </memballoon>
+    <rng model="virtio">
+      <backend model="random">/dev/urandom</backend>
+      <address type="pci" domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
+    </rng>
   </devices>
 </domain>

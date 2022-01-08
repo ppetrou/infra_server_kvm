@@ -1,0 +1,18 @@
+{ 
+  "vm_desc": "(XL)",
+  "vm_spec": "4 vCPU, 32GB RAM, 64GB Disk, 1 Management NIC DHCP",
+  "vm_name": "xlarge-lab1",
+  "vm_hostname": "xlarge-lab1.lab.local",
+  "vm_mem": 32768,
+  "vm_mem_current": 16384,
+  "vm_cpu": 4,
+  "vm_disks": [{ "device": "vda", "size": "64G", "bootable": True }],
+  "vm_mac_prefix": "bc:ae:80",
+  "vm_interfaces": [],
+  "vm_default_partition": { "device": "vda", "part_num": 1, "fstype": "xfs", "size": 63, "unit": "GiB" },
+  "vm_partitions": [],
+  "vm_volume_groups": [],
+  "vm_logical_volumes": [],
+  "vm_default_filesystem": { "device": "vda1", "mountpoint": "/", "fstype": "xfs", "type": "standard" },
+  "vm_filesystems": [] 
+}         
