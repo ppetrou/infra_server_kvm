@@ -1,0 +1,15 @@
+<network>
+  <name>{{ network_name}}</name>
+  <uuid>{{ network_uuid }}</uuid>
+  <bridge name="br_{{ network_name }}" stp="on" delay="0"/>
+  {% if network_mac == '' %}
+  <mac address='{{ mac_prefix|random_mac }}'/>
+  {% else %}
+  <mac address='{{ network_mac }}'/>
+  {% endif %}
+  <domain name="{{ network_name }}"/>
+</network>
+
+
+
+

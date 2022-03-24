@@ -13,8 +13,8 @@ vm_disks: [
 ]
 vm_mac_prefix: "bc:ae:80"
 vm_interfaces: []
-vm_default_partition: { device: "vda", part_num: 1, size: 10, unit: GiB }
-vm_default_filesystem: { device: "vda1", mountpoint: "/", fstype: "xfs", type: "standard" }
+vm_cloud_image_partition: { device: "vda", part_num: 1, size: 10, unit: GiB }
+vm_cloud_image_filesystem: { device: "vda1", mountpoint: "/", fstype: "xfs", type: "standard" }
 vm_partitions: []
 vm_volume_groups: []
 vm_logical_volumes: []

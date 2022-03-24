@@ -3,7 +3,7 @@
 
 # Create Directories
 - name: Create Directories
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     mode: 0755
@@ -14,7 +14,7 @@
 
 # Get Cloud Image
 - name: Get Cloud Image
-  copy:
+  ansible.builtin.copy:
     src: "{{ cloud_image_path }}"
     dest: "{{ vm_tmp_disk }}"
     force: no
@@ -22,16 +22,16 @@
 
 # Check for LVM Storage Configuration
 - name: Check for LVM Storage Configuration
-  set_fact:
+  ansible.builtin.set_fact:
     provision_lvm: "{{ vm_volume_groups is defined and vm_volume_groups|length > 0 and vm_logical_volumes is defined and vm_logical_volumes|length > 0 }}"
 
 # Set Image Root Password
 - name: Set Image root password
-  command: virt-customize -a {{ vm_tmp_disk }} --root-password password:root
+  ansible.builtin.command: virt-customize -a {{ vm_tmp_disk }} --root-password password:root
 
 # Remove Cloud Init Package from Cloud image
 - name: Remove Cloud Init Package from Cloud image
-  command: virt-customize -a {{ vm_tmp_disk }} --uninstall cloud-init
+  ansible.builtin.command: virt-customize -a {{ vm_tmp_disk }} --uninstall cloud-init
 
 # Include Encrypted Variables
 - name: Include Encrypted Variables for the Subscription Manager
@@ -45,7 +45,7 @@
 # Install lvm2 package if we need LVM Storage
 # Register to Subscription Manager if a Red Hat Image
 - name: Register to Subscription Manager if a Red Hat Image and LVM is required
-  command: virt-customize -a {{ vm_tmp_disk }} --sm-register --sm-credentials {{ sm_cred.sm_username }}:password:{{ sm_cred.sm_password }} --sm-attach auto
+  ansible.builtin.command: virt-customize -a {{ vm_tmp_disk }} --sm-register --sm-credentials {{ sm_cred.sm_username }}:password:{{ sm_cred.sm_password }} --sm-attach auto
   register: r_sm
   when:
     - "'redhat' in vm_osinfo_id"
@@ -56,27 +56,27 @@
 
 # Install lvm2
 - name: Install lvm2
-  command: virt-customize -a {{ vm_tmp_disk }} --install lvm2
+  ansible.builtin.command: virt-customize -a {{ vm_tmp_disk }} --install lvm2
   when: provision_lvm == true
 
 # Unregister from Subscription Manager if a Red Hat Image
 - name: Unregister from Subscription Manager if a Red Hat Image and LVM is required
-  command: virt-customize -a {{ vm_tmp_disk }} --sm-unregister
+  ansible.builtin.command: virt-customize -a {{ vm_tmp_disk }} --sm-unregister
   when:
     - "'redhat' in vm_osinfo_id"
     - provision_lvm == true
 
 # Create root ssh key pair
 - name: Create root ssh key pair
-  openssh_keypair:
+  community.crypto.openssh_keypair:
     path: "{{ vm_keys_dir }}/{{ vm_name }}_root"
 
 # Inject Public key to root
 - name: Inject Public key to root
-  command: virt-customize -a {{ vm_tmp_disk }} --ssh-inject root:file:{{ vm_keys_dir }}/{{ vm_name }}_root.pub
+  ansible.builtin.command: virt-customize -a {{ vm_tmp_disk }} --ssh-inject root:file:{{ vm_keys_dir }}/{{ vm_name }}_root.pub
 
 - name: Create Disks
-  command: qemu-img create -f {{ vm_disk_format }} {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disk_create.device }}.{{ vm_disk_format }} -o preallocation=metadata,compat=1.1 {{ vm_disk_create.size }}
+  ansible.builtin.command: qemu-img create -f {{ vm_disk_format }} {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disk_create.device }}.{{ vm_disk_format }} -o preallocation=metadata,compat=1.1 {{ vm_disk_create.size }}
   loop: "{{ vm_disks }}"
   loop_control:
     extended: yes
@@ -84,20 +84,20 @@
 
 # Resize Cloud Image.
 - name: Resize Cloud Image
-  command: virt-resize --no-extra-partition {{ vm_tmp_disk }} {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }}
+  ansible.builtin.command: virt-resize --no-extra-partition {{ vm_tmp_disk }} {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }}
 
 # Relabel fs
 - name: Relabel FS
-  command: virt-customize -a {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }} --selinux-relabel
+  ansible.builtin.command: virt-customize -a {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }} --selinux-relabel
 
-- name: Process Default Cloud Partition - Resize to "{{ vm_default_partition.size }}" "{{ vm_default_partition.unit }}"
+- name: Process Default Cloud Partition - Resize to "{{ vm_cloud_image_partition.size }}" "{{ vm_cloud_image_partition.unit }}"
   gfs_part:
-    image_path: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_default_partition.device }}.{{ vm_disk_format }}"
-    device: "{{ vm_default_partition.device }}"
-    number: "{{ vm_default_partition.part_num }}"
-    #fstype: "{{ vm_default_partition.fstype }}"
-    size: "{{ vm_default_partition.size }}"
-    unit: "{{ vm_default_partition.unit }}"
+    image_path: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_cloud_image_partition.device }}.{{ vm_disk_format }}"
+    device: "{{ vm_cloud_image_partition.device }}"
+    number: "{{ vm_cloud_image_partition.part_num }}"
+    #fstype: "{{ vm_cloud_image_partition.fstype }}"
+    size: "{{ vm_cloud_image_partition.size }}"
+    unit: "{{ vm_cloud_image_partition.unit }}"
     resize: true
     state: present
 
@@ -148,18 +148,18 @@
 
 # Check if Hypervisor and Cloud Image are on same OS version
 - name: Check if Hypervisor and Cloud Image are on same OS version
-  set_fact:
+  ansible.builtin.set_fact:
     hypervisor_and_cloud_image_not_same: "{{ ansible_facts['distribution'] not in vm_osinfo_id and ansible_facts['distribution_version'] not in vm_osinfo_id}}"
 
 # Setup Default Filesystem
 - name: Setup Default Filesystem
   gfs_fs:
-    image_paths: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_default_partition.device }}.{{ vm_disk_format }}"
-    device: "{{ vm_default_filesystem.device }}"
-    device_type: "{{ vm_default_filesystem.type }}"
-    use_image_mkfs_xfs: "{{ hypervisor_and_cloud_image_not_same and vm_default_filesystem.fstype == 'xfs' }}"
-    fstype: "{{ vm_default_filesystem.fstype }}"
-    mountpoint: "{{ vm_default_filesystem.mountpoint }}"
+    image_paths: "{{ vm_root_dir }}/{{ vm_name }}_{{ vm_cloud_image_partition.device }}.{{ vm_disk_format }}"
+    device: "{{ vm_cloud_image_filesystem.device }}"
+    device_type: "{{ vm_cloud_image_filesystem.type }}"
+    use_image_mkfs_xfs: "{{ hypervisor_and_cloud_image_not_same and vm_cloud_image_filesystem.fstype == 'xfs' }}"
+    fstype: "{{ vm_cloud_image_filesystem.fstype }}"
+    mountpoint: "{{ vm_cloud_image_filesystem.mountpoint }}"
     state: resize
 
 # Setup filesystems
@@ -180,33 +180,32 @@
 
 # Set hostname
 - name: Set hostname
-  command: virt-customize -a {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }} --hostname {{ vm_hostname }}
+  ansible.builtin.command: virt-customize -a {{ vm_root_dir }}/{{ vm_name }}_{{ vm_disks[0].device }}.{{ vm_disk_format }} --hostname {{ vm_hostname }}
 
 - name: Set vm_macs array to empty
-  set_fact:
+  ansible.builtin.set_fact:
     vm_generated_mac_addresses: []
 
 - name: Generate MAC Addresses
-  set_fact:
+  ansible.builtin.set_fact:
     vm_generated_mac_addresses: "{{ vm_generated_mac_addresses }} + [ '{{ vm_mac_prefix|random_mac }}' ]"
   loop: "{{ vm_interfaces }}"
   loop_control:
-    label: "{{ netifg_genmac.nic_id }}"
     loop_var: netifg_genmac
 
 # Create VM
 - name: Template VM
-  template:
+  ansible.builtin.template:
     src: libvirt_vm_cloud.xml.j2
     dest: "{{ vm_xml_dir }}/{{ vm_name }}.xml"
 
 - name: Define vm from XML
-  virt:
+  community.libvirt.virt:
    command: define
    xml: "{{ lookup('file', '{{ vm_xml_dir }}/{{ vm_name }}.xml') }}"
 
 # Clean up vendor cloud image
 - name: Delete Vendor Cloud Image
-  file:
+  ansible.builtin.file:
     path: "{{ vm_tmp_disk }}"
     state: absent

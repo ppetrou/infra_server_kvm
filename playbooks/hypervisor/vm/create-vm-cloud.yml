@@ -18,11 +18,13 @@
         vm_disks: "{{ item.vm_disks }}"
         vm_mac_prefix: "{{ item.vm_mac_prefix }}"
         vm_interfaces: "{{ item.vm_interfaces }}"
-        default_partition: "{{ item.default_partition }}"
+        vm_cloud_image_partition: "{{ item.vm_cloud_image_partition }}"
+        vm_cloud_image_filesystem: "{{ item.vm_cloud_image_filesystem }}"
         vm_partitions: "{{ item.vm_partitions }}"
         vm_volume_groups: "{{ item.vm_volume_groups }}"
         vm_logical_volumes: "{{ item.vm_logical_volumes }}"
         vm_filesystems: "{{ item.vm_filesystems }}"
+        mgmt_nic_network: "mgmt"
       loop:
         - vm_name: centos8-dev-lab1
           vm_hostname: centos8-stream.lab.local
@@ -36,10 +38,11 @@
           ]
           vm_mac_prefix: "bc:ae:80"
           vm_interfaces: [
-            { nic_id: "NIC1", network: "overcloud00", mac: "" },
-            { nic_id: "NIC2", network: "overcloud00", mac: "" }
+            { network: "net1", mac: "" },
+            { network: "net2", mac: "" }
           ]
-          default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
+          vm_cloud_image_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 39, unit: GiB }
+          vm_cloud_image_filesystem: { device: "vda1", mountpoint: "/", fstype: "xfs", type: "standard" }
           vm_partitions: [
           ]
           vm_volume_groups: [
@@ -61,10 +64,11 @@
           ]
           vm_mac_prefix: "bc:ae:80"
           vm_interfaces: [
-            { nic_id: "NIC1", network: "overcloud00", mac: "" },
-            { nic_id: "NIC2", network: "overcloud00", mac: "" }
+            { network: "net1", mac: "" },
+            { network: "net2", mac: "" }
           ]
-          default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
+          vm_cloud_image_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
+          vm_cloud_image_filesystem: { device: "vda1", mountpoint: "/", fstype: "xfs", type: "standard" }
           vm_partitions: [
             { device: "vda", part_num: 2, size: 2,  unit: GiB },
             { device: "vda", part_num: 3, size: 5,  unit: GiB },

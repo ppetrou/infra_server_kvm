@@ -1,0 +1,38 @@
+---
+- hosts: hypervisor
+  tasks:
+
+    - name: Provision NET
+      include_role:
+        name: infra_server_kvm_net_create
+      vars:
+        name: "{{ item.name }}"
+        type: "{{ item.type }}"
+        mac_prefix: "{{ item.mac_prefix }}"
+        mac: "{{ mac_prefix|random_mac }}"
+        network_ip: "{{ item.network_ip }}" 
+        network_netmask: "{{ item.network_netmask }}"
+        network_start: "{{ item.network_start }}"
+        network_end: "{{ item.network_end }}"
+      loop:
+        - name: network10
+          type: isolated
+          mac_prefix: "bc:ae:80"
+          network_ip: "" 
+          network_netmask: ""
+          network_start: ""
+          network_end: ""
+        - name: network11
+          type: isolated
+          mac_prefix: "bc:ae:80"
+          network_ip: "" 
+          network_netmask: ""
+          network_start: ""
+          network_end: ""
+        - name: network12
+          type: nat
+          mac_prefix: "bc:ae:80"
+          network_ip: "192.168.144.1" 
+          network_netmask: "255.255.255.0"
+          network_start: "192.168.144.100"
+          network_end: "192.168.144.120"

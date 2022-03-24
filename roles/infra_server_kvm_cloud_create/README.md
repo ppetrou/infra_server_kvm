@@ -243,7 +243,8 @@ Example Playbook
           ]
           vm_mac_prefix: "bc:ae:80"
           vm_interfaces: [
-            { ifname: "eth0", bridge: "br0", mac: "bc:ae:80:9b:b9:e8", bootproto: static, ip_addr: 192.168.100.200, netmask: None, gateway: 192.168.100.1, dns_servers: [] }
+            { bridge: "br0", mac: "bc:ae:80:9b:b9:e8" },
+            { network: "net1", mac: "bc:ae:80:9b:b9:e8" }
           ]
           default_partition: { device: "vda", part_num: 1, fstype: "xfs", size: 10, unit: GiB }
           vm_partitions: [
@@ -269,7 +270,7 @@ Example Playbook
 License
 -------
 
-LGPL
+Apache 2.0
 
 Author Information
 ------------------

@@ -1,0 +1,12 @@
+---
+# defaults file for infra_server_kvm_net_create
+
+name: "net1"
+type: isolated
+mac_prefix: "bc:ae:80"
+mac: ""
+ip: "" 
+netmask: ""
+start_ip: ""
+end_ip: ""
+ 

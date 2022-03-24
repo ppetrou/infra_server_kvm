@@ -1,0 +1,63 @@
+---
+# tasks file for infra_server_kvm_net_create
+
+- name: Render Isolated Network File
+  vars:
+    network_name: "{{ name }}"
+    network_uuid: "{{ name | to_uuid }}"
+    network_mac: "{{ mac }}"
+  ansible.builtin.template:
+    src: isolated.xml.j2
+    dest: /tmp/{{ name }}.xml
+  when: type == "isolated"
+
+- name: Render NAT Network File
+  vars:
+    network_name: "{{ name }}"
+    network_uuid: "{{ name | to_uuid }}" 
+    network_mac: "{{ mac }}"
+    network_ip: "{{ ip }}" 
+    network_netmask: "{{ netmask }}"
+    network_start: "{{ start_ip }}"
+    network_end: "{{ end_ip }}"
+  ansible.builtin.template:
+    src: nat.xml.j2
+    dest: /tmp/{{ name }}.xml
+  when: type == "nat"
+
+- name: Destroy Network
+  community.libvirt.virt_net:
+    command: destroy
+    name: "{{ name }}"
+  register: r_destroy_net
+  failed_when:
+    - r_destroy_net.failed == true
+    - "'not found' not in r_destroy_net.msg"
+
+- name: Undefine Network
+  community.libvirt.virt_net:
+    command: undefine
+    name: "{{ name }}"
+
+- name: Define Network
+  community.libvirt.virt_net:
+    command: define
+    name: "{{ name }}"
+    xml: "{{ lookup('file', '/tmp/{{ name }}.xml') }}"
+    autostart: yes
+
+- name: Auto-start Network
+  community.libvirt.virt_net:
+    name: "{{ name }}"
+    autostart: yes
+
+- name: Start Network
+  community.libvirt.virt_net:
+    name: "{{ name }}"
+    state: active
+
+
+
+
+
+

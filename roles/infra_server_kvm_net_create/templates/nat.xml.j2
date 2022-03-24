@@ -1,0 +1,21 @@
+<network>
+  <name>{{ network_name}}</name>
+  <uuid>{{ network_uuid }}</uuid>
+  <forward mode="nat">
+    <nat>
+      <port start="1024" end="65535"/>
+    </nat>
+  </forward>
+  <bridge name="br_{{ network_name }}" stp="on" delay="0"/>
+  {% if network_mac == '' %}
+  <mac address='{{ mac_prefix|random_mac }}'/>
+  {% else %}
+  <mac address='{{ network_mac }}'/>
+  {% endif %}
+  <domain name="{{ network_name }}"/>
+  <ip address="{{ network_ip }}" netmask="{{ network_netmask }}">
+    <dhcp>
+      <range start="{{ network_start }}" end="{{ network_end }}"/>
+    </dhcp>
+  </ip>
+</network>
